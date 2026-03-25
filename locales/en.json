@@ -1,0 +1,117 @@
+{
+  "common": {
+    "appName": "RAON WMS",
+    "appFull": "RAON Work Management System",
+    "login": "Login",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "approve": "Approve",
+    "reject": "Reject",
+    "submit": "Submit",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "loading": "Loading...",
+    "noData": "No data found.",
+    "adminBadge": "Admin",
+    "viewAll": "View All",
+    "close": "Close",
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "active": "Active",
+      "inactive": "Inactive",
+      "probation": "Probation"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "employees": "Employees",
+    "attendance": "Attendance",
+    "leaves": "Leave / Sick Leave",
+    "documents": "Documents",
+    "expenses": "Expenses",
+    "partners": "Partners",
+    "invoices": "Quotation / Invoice",
+    "announcements": "Announcements",
+    "settings": "Settings",
+    "groups": {
+      "main": "Main",
+      "hr": "HR",
+      "documents": "Documents",
+      "accounting": "Accounting",
+      "settings": "Settings"
+    },
+    "warnings": "Warnings",
+    "reports": "Reports"
+  },
+  "dashboard": {
+    "greeting": "Hello, {{name}} 👋",
+    "checkIn": "Check In",
+    "checkOut": "Check Out",
+    "checkedIn": "Checked In ✓",
+    "stats": {
+      "totalEmployees": "Total Employees",
+      "presentToday": "Present Today",
+      "onLeave": "On Leave",
+      "pendingApproval": "Pending Approval",
+      "annualLeave": "Annual Leave Left",
+      "sickLeave": "Sick Leave Left",
+      "personalLeave": "Personal Leave Left",
+      "attendanceMonth": "Days Present This Month"
+    },
+    "quickMenu": "Quick Menu",
+    "announcements": "Announcements",
+    "noAnnouncements": "No announcements yet.",
+    "writeAnnouncement": "+ Write Announcement",
+    "viewAllAnnouncements": "View all announcements →"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "new": "New Announcement",
+    "noAnnouncements": "No announcements yet.",
+    "publishedAt": "Published",
+    "author": "Author",
+    "readMore": "Read More",
+    "form": {
+      "title": "Title",
+      "content": "Content",
+      "titlePlaceholder": "Enter announcement title",
+      "contentPlaceholder": "Enter announcement content...",
+      "publish": "Publish",
+      "preview": "Preview"
+    }
+  },
+  "leaves": {
+    "annual": "Annual Leave",
+    "sick": "Sick Leave",
+    "personal": "Personal Leave (ลากิจ)",
+    "unpaid": "Unpaid Leave",
+    "request": "Request Leave",
+    "history": "Leave History",
+    "balance": "Leave Balance",
+    "requireDoctorNote": "Doctor's note required (over 3 days)",
+    "advanceNotice": "Must apply 5 days in advance",
+    "deduction": "Salary deduction applies"
+  },
+  "documents": {
+    "employmentContract": "Employment Contract",
+    "probationPass": "Probation Pass Notice",
+    "salaryVerification": "Salary Verification Letter",
+    "leaveForm": "Leave Request Form",
+    "payslip": "Payslip",
+    "warningLetter": "Warning Letter",
+    "resignationLetter": "Resignation Letter",
+    "withholdingTax": "ทวิ 50 Withholding Tax Certificate",
+    "announcement": "Announcement"
+  },
+  "login": {
+    "subtitle": "Work Management System",
+    "googleLogin": "Sign in with Google",
+    "loginNote": "Company Google accounts only.",
+    "loggingIn": "Signing in..."
+  }
+}

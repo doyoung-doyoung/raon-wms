@@ -1,0 +1,117 @@
+{
+  "common": {
+    "appName": "RAON WMS",
+    "appFull": "ระบบจัดการงาน RAON",
+    "login": "เข้าสู่ระบบ",
+    "logout": "ออกจากระบบ",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "approve": "อนุมัติ",
+    "reject": "ปฏิเสธ",
+    "submit": "ส่ง",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "search": "ค้นหา",
+    "loading": "กำลังโหลด...",
+    "noData": "ไม่มีข้อมูล",
+    "adminBadge": "ผู้ดูแล",
+    "viewAll": "ดูทั้งหมด",
+    "close": "ปิด",
+    "status": {
+      "pending": "รอดำเนินการ",
+      "approved": "อนุมัติแล้ว",
+      "rejected": "ไม่อนุมัติ",
+      "active": "ทำงานอยู่",
+      "inactive": "ลาออกแล้ว",
+      "probation": "ทดลองงาน"
+    }
+  },
+  "nav": {
+    "dashboard": "แดชบอร์ด",
+    "employees": "จัดการพนักงาน",
+    "attendance": "เข้า-ออกงาน",
+    "leaves": "ลาหยุด / ลาป่วย",
+    "documents": "ออกเอกสาร",
+    "expenses": "เบิกค่าใช้จ่าย",
+    "partners": "จัดการพาร์ทเนอร์",
+    "invoices": "ใบเสนอราคา / ใบแจ้งหนี้",
+    "announcements": "ประกาศ",
+    "settings": "ตั้งค่า",
+    "groups": {
+      "main": "หลัก",
+      "hr": "ทรัพยากรบุคคล",
+      "documents": "เอกสาร",
+      "accounting": "การเงิน",
+      "settings": "ตั้งค่า"
+    },
+    "warnings": "หนังสือตักเตือน",
+    "reports": "รายงาน"
+  },
+  "dashboard": {
+    "greeting": "สวัสดี, {{name}} 👋",
+    "checkIn": "บันทึกเวลาเข้างาน",
+    "checkOut": "บันทึกเวลาออกงาน",
+    "checkedIn": "เข้างานแล้ว ✓",
+    "stats": {
+      "totalEmployees": "พนักงานทั้งหมด",
+      "presentToday": "มาทำงานวันนี้",
+      "onLeave": "ลาหยุด",
+      "pendingApproval": "รออนุมัติ",
+      "annualLeave": "วันลาพักร้อนคงเหลือ",
+      "sickLeave": "วันลาป่วยคงเหลือ",
+      "personalLeave": "วันลากิจคงเหลือ",
+      "attendanceMonth": "วันมาทำงานเดือนนี้"
+    },
+    "quickMenu": "เมนูด่วน",
+    "announcements": "ประกาศ",
+    "noAnnouncements": "ไม่มีประกาศ",
+    "writeAnnouncement": "+ เขียนประกาศ",
+    "viewAllAnnouncements": "ดูประกาศทั้งหมด →"
+  },
+  "announcements": {
+    "title": "ประกาศ",
+    "new": "เขียนประกาศใหม่",
+    "noAnnouncements": "ไม่มีประกาศ",
+    "publishedAt": "วันที่ประกาศ",
+    "author": "ผู้เขียน",
+    "readMore": "อ่านต่อ",
+    "form": {
+      "title": "หัวข้อ",
+      "content": "เนื้อหา",
+      "titlePlaceholder": "กรอกหัวข้อประกาศ",
+      "contentPlaceholder": "กรอกเนื้อหาประกาศ...",
+      "publish": "เผยแพร่ประกาศ",
+      "preview": "ตัวอย่าง"
+    }
+  },
+  "leaves": {
+    "annual": "ลาพักร้อน",
+    "sick": "ลาป่วย",
+    "personal": "ลากิจ",
+    "unpaid": "ลาโดยไม่รับเงินเดือน",
+    "request": "ยื่นคำร้องขอลา",
+    "history": "ประวัติการลา",
+    "balance": "วันลาคงเหลือ",
+    "requireDoctorNote": "ต้องแนบใบรับรองแพทย์ (เกิน 3 วัน)",
+    "advanceNotice": "ต้องแจ้งล่วงหน้า 5 วัน",
+    "deduction": "หักเงินเดือน"
+  },
+  "documents": {
+    "employmentContract": "สัญญาจ้างงาน",
+    "probationPass": "ใบผ่านช่วงทดลองงาน",
+    "salaryVerification": "หนังสือรับรองเงินเดือน",
+    "leaveForm": "ใบลาหยุด",
+    "payslip": "สลิปเงินเดือน",
+    "warningLetter": "หนังสือเตือน",
+    "resignationLetter": "ใบลาออก",
+    "withholdingTax": "ทวิ 50",
+    "announcement": "ประกาศ"
+  },
+  "login": {
+    "subtitle": "ระบบจัดการงาน",
+    "googleLogin": "เข้าสู่ระบบด้วย Google",
+    "loginNote": "สำหรับบัญชี Google ของบริษัทเท่านั้น",
+    "loggingIn": "กำลังเข้าสู่ระบบ..."
+  }
+}

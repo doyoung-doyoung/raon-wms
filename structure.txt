@@ -1,0 +1,111 @@
+raon-wms/
+├── app/
+│   ├── (auth)/
+│   │   └── login/
+│   │       └── page.jsx
+│   ├── (dashboard)/
+│   │   ├── layout.jsx
+│   │   ├── dashboard/
+│   │   │   └── page.jsx
+│   │   ├── employees/
+│   │   │   ├── page.jsx
+│   │   │   ├── [id]/
+│   │   │   │   └── page.jsx
+│   │   │   └── new/
+│   │   │       └── page.jsx
+│   │   ├── leaves/
+│   │   │   ├── page.jsx
+│   │   │   └── request/
+│   │   │       └── page.jsx
+│   │   ├── attendance/
+│   │   │   └── page.jsx
+│   │   ├── documents/
+│   │   │   └── page.jsx
+│   │   ├── invoices/
+│   │   │   ├── page.jsx
+│   │   │   └── new/
+│   │   │       └── page.jsx
+│   │   ├── partners/
+│   │   │   └── page.jsx
+│   │   ├── expenses/
+│   │   │   └── page.jsx
+│   │   └── settings/
+│   │       └── page.jsx
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.js
+│   │   ├── employees/
+│   │   │   └── route.js
+│   │   ├── leaves/
+│   │   │   └── route.js
+│   │   ├── attendance/
+│   │   │   └── route.js
+│   │   ├── documents/
+│   │   │   └── route.js
+│   │   ├── invoices/
+│   │   │   └── route.js
+│   │   └── google/
+│   │       ├── drive/
+│   │       │   └── route.js
+│   │       ├── calendar/
+│   │       │   └── route.js
+│   │       └── sheets/
+│   │           └── route.js
+│   ├── layout.jsx
+│   └── globals.css
+├── components/
+│   ├── ui/
+│   │   ├── Button.jsx
+│   │   ├── Modal.jsx
+│   │   ├── Table.jsx
+│   │   ├── Badge.jsx
+│   │   └── Calendar.jsx
+│   ├── layout/
+│   │   ├── Sidebar.jsx
+│   │   ├── Header.jsx
+│   │   └── Navbar.jsx
+│   ├── employees/
+│   │   ├── EmployeeForm.jsx
+│   │   └── EmployeeCard.jsx
+│   ├── leaves/
+│   │   ├── LeaveCalendar.jsx
+│   │   └── LeaveRequestForm.jsx
+│   ├── documents/
+│   │   ├── DocumentPreview.jsx
+│   │   └── SignatureOverlay.jsx
+│   └── invoices/
+│       ├── InvoiceForm.jsx
+│       └── InvoicePreview.jsx
+├── lib/
+│   ├── google/
+│   │   ├── auth.js
+│   │   ├── drive.js
+│   │   ├── calendar.js
+│   │   ├── sheets.js
+│   │   └── gmail.js
+│   ├── documents/
+│   │   ├── templateEngine.js
+│   │   └── pdfGenerator.js
+│   ├── leaves/
+│   │   └── leaveCalculator.js
+│   └── utils/
+│       ├── dateUtils.js
+│       └── formatters.js
+├── hooks/
+│   ├── useEmployee.js
+│   ├── useLeave.js
+│   └── useAttendance.js
+├── store/
+│   └── useStore.js
+├── locales/
+│   ├── ko.json
+│   ├── th.json
+│   └── en.json
+├── public/
+│   ├── logo.png
+│   └── signature/   ← 이사 서명 이미지 저장
+├── .env.local
+├── next.config.js
+├── package.json
+└── tailwind.config.js
