@@ -8,14 +8,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/documents',
+          scope: 'openid email profile',
           access_type: 'offline',
           prompt: 'consent',
         },
       },
     }),
   ],
-
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
@@ -33,12 +32,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
-
   pages: {
     signIn: '/login',
     error: '/login',
   },
-
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60,

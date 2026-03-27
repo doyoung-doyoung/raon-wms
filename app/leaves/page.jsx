@@ -2,11 +2,9 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { useLang } from '../../lib/i18n/useLang'
 import { format } from 'date-fns'
 import LeaveCalendar from '../../components/leaves/LeaveCalendar'
 
-// 태국 공휴일 2026 (이사가 설정 가능)
 const THAI_HOLIDAYS_2026 = [
   { date: '2026-01-01', name: 'วันขึ้นปีใหม่ (새해)' },
   { date: '2026-02-05', name: 'วันมาฆบูชา' },
@@ -30,22 +28,22 @@ const THAI_HOLIDAYS_2026 = [
 
 export default function LeavesPage() {
   const { data: session } = useSession()
-  const { t } = useLang()
   const isAdmin = session?.isAdmin
 
   const [leaves, setLeaves] = useState([])
+  const [balance, setBalance] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [selected, setSelected] = useState(null)
   const [activeTab, setActiveTab] = useState('all')
   const [calendarSelection, setCalendarSelection] = useState({ startDate: null, endDate: null, days: 0 })
-  const [form, setForm] = useState({
-    leave_type: 'annual',
-    reason: '',
-  })
+  const [form, setForm] = useState({ leave_type: 'annual', reason: '' })
 
-  useEffect(() => { fetchLeaves() }, [session])
+  useEffect(() => {
+    fetchLeaves()
+    if (!isAdmin) fetchBalance()
+  }, [session, isAdmin])
 
   const fetchLeaves = async () => {
     setLoading(true)
@@ -57,10 +55,17 @@ export default function LeavesPage() {
     setLoading(false)
   }
 
+  const fetchBalance = async () => {
+    try {
+      const res = await fetch('/api/leaves/balance')
+      const data = await res.json()
+      if (data.balance) setBalance(data.balance)
+    } catch (e) { console.error(e) }
+  }
+
   const handleSubmit = async () => {
     if (!calendarSelection.startDate || !calendarSelection.endDate || !form.reason) return
     if (calendarSelection.days === 0) return
-
     setSaving(true)
     try {
       const res = await fetch('/api/leaves', {
@@ -76,6 +81,7 @@ export default function LeavesPage() {
       const data = await res.json()
       if (data.success) {
         await fetchLeaves()
+        await fetchBalance()
         setShowForm(false)
         setCalendarSelection({ startDate: null, endDate: null, days: 0 })
         setForm({ leave_type: 'annual', reason: '' })
@@ -99,10 +105,10 @@ export default function LeavesPage() {
   }
 
   const leaveTypeInfo = {
-    annual:   { label: '🌴 연차',   color: '#4f62f7', bg: 'rgba(79,98,247,0.1)' },
-    sick:     { label: '🏥 병가',   color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
-    personal: { label: '🌸 경조사', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    unpaid:   { label: '💸 무급',   color: '#8b91ab', bg: 'rgba(139,145,171,0.1)' },
+    annual:   { label: '연차',   icon: '🌴', color: '#4f62f7', bg: 'rgba(79,98,247,0.1)' },
+    sick:     { label: '병가',   icon: '🏥', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+    personal: { label: '경조사', icon: '🌸', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    unpaid:   { label: '무급',   icon: '💸', color: '#8b91ab', bg: 'rgba(139,145,171,0.1)' },
   }
 
   const statusInfo = {
@@ -119,10 +125,10 @@ export default function LeavesPage() {
 
   const tabs = [
     { key: 'all',      label: '전체' },
-    { key: 'pending',  label: '⏳ 대기 중' },
-    { key: 'annual',   label: '🌴 연차' },
-    { key: 'sick',     label: '🏥 병가' },
-    { key: 'personal', label: '🌸 경조사' },
+    { key: 'pending',  label: '대기 중' },
+    { key: 'annual',   label: '연차' },
+    { key: 'sick',     label: '병가' },
+    { key: 'personal', label: '경조사' },
   ]
 
   return (
@@ -130,7 +136,7 @@ export default function LeavesPage() {
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>🗓️ 휴가 / 병가</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>휴가 / 병가</h1>
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>총 {leaves.length}건</p>
         </div>
         {!isAdmin && (
@@ -148,13 +154,31 @@ export default function LeavesPage() {
       {!isAdmin && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
           {[
-            { label: '🌴 잔여 연차', value: '-', sub: '올해 기준' },
-            { label: '🏥 잔여 병가', value: '-', sub: '연 30일 한도' },
-            { label: '🌸 잔여 경조사', value: '-', sub: '연 3일 유급' },
+            {
+              label: '잔여 연차',
+              icon: '🌴',
+              value: balance ? balance.annual.remaining : '-',
+              sub: balance ? `${balance.annual.used}일 사용 / 총 ${balance.annual.limit}일` : '계산 중...',
+              color: '#4f62f7',
+            },
+            {
+              label: '잔여 병가',
+              icon: '🏥',
+              value: balance ? balance.sick.remaining : '-',
+              sub: balance ? `${balance.sick.used}일 사용 / 총 ${balance.sick.limit}일` : '계산 중...',
+              color: '#22c55e',
+            },
+            {
+              label: '잔여 경조사',
+              icon: '🌸',
+              value: balance ? balance.personal.remaining : '-',
+              sub: balance ? `${balance.personal.used}일 사용 / 총 ${balance.personal.limit}일` : '계산 중...',
+              color: '#f59e0b',
+            },
           ].map((item, i) => (
             <div key={i} style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px' }}>
-              <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>{item.label}</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: '#f1f3f9' }}>{item.value}일</div>
+              <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>{item.icon} {item.label}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: item.color }}>{item.value}일</div>
               <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>{item.sub}</div>
             </div>
           ))}
@@ -201,11 +225,11 @@ export default function LeavesPage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: lt.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                    {lt.label.split(' ')[0]}
+                    {lt.icon}
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#f1f3f9' }}>{lt.label.split(' ')[1]}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#f1f3f9' }}>{lt.label}</span>
                       {isAdmin && <span style={{ fontSize: 12, color: '#8b91ab' }}>{leave.employee_name}</span>}
                     </div>
                     <div style={{ fontSize: 12, color: '#8b91ab' }}>{leave.start_date} ~ {leave.end_date} ({leave.days}일)</div>
@@ -226,7 +250,7 @@ export default function LeavesPage() {
         <div style={{ position: 'fixed', right: 0, top: 0, bottom: 0, width: 360, background: '#141828', borderLeft: '1px solid rgba(255,255,255,0.07)', padding: '24px', overflow: 'auto', zIndex: 50, animation: 'slideIn 0.2s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>휴가 상세</h2>
-            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>×</button>
+            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>x</button>
           </div>
           {[
             { label: '직원', value: selected.employee_name },
@@ -245,8 +269,8 @@ export default function LeavesPage() {
           ) : null)}
           {isAdmin && selected.status === 'pending' && (
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button onClick={() => handleApprove(selected.id, 'approved')} style={{ flex: 1, padding: '10px', background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>✓ 승인</button>
-              <button onClick={() => handleApprove(selected.id, 'rejected')} style={{ flex: 1, padding: '10px', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>✕ 반려</button>
+              <button onClick={() => handleApprove(selected.id, 'approved')} style={{ flex: 1, padding: '10px', background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>승인</button>
+              <button onClick={() => handleApprove(selected.id, 'rejected')} style={{ flex: 1, padding: '10px', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>반려</button>
             </div>
           )}
         </div>
@@ -257,27 +281,31 @@ export default function LeavesPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: '32px', width: '100%', maxWidth: 520, maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>🗓️ 휴가 신청</h2>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>×</button>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>휴가 신청</h2>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>x</button>
             </div>
 
             {/* 휴가 종류 */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 8 }}>휴가 종류 *</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {Object.entries(leaveTypeInfo).filter(([k]) => k !== 'sick').map(([key, info]) => (
+                {[
+                  { key: 'annual',   label: '연차',   color: '#4f62f7', bg: 'rgba(79,98,247,0.1)' },
+                  { key: 'personal', label: '경조사', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+                  { key: 'unpaid',   label: '무급',   color: '#8b91ab', bg: 'rgba(139,145,171,0.1)' },
+                ].map(({ key, label, color, bg }) => (
                   <button key={key} onClick={() => { setForm(p => ({ ...p, leave_type: key })); setCalendarSelection({ startDate: null, endDate: null, days: 0 }) }} style={{
-                    padding: '10px', border: `1px solid ${form.leave_type === key ? info.color : 'rgba(255,255,255,0.08)'}`,
-                    borderRadius: 10, background: form.leave_type === key ? info.bg : 'transparent',
-                    color: form.leave_type === key ? info.color : '#8b91ab',
+                    padding: '10px', border: `1px solid ${form.leave_type === key ? color : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 10, background: form.leave_type === key ? bg : 'transparent',
+                    color: form.leave_type === key ? color : '#8b91ab',
                     fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
                   }}>
-                    {info.label}
+                    {label}
                   </button>
                 ))}
               </div>
               <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 8, fontSize: 12, color: '#4ade80' }}>
-                🏥 병가는 결근 시 자동으로 이메일이 발송됩니다
+                병가는 결근 시 자동으로 이메일이 발송됩니다
               </div>
             </div>
 
@@ -295,12 +323,12 @@ export default function LeavesPage() {
             {calendarSelection.startDate && (
               <div style={{ background: 'rgba(79,98,247,0.08)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
                 <div style={{ color: '#818cf8' }}>
-                  📅 {format(calendarSelection.startDate, 'yyyy.MM.dd')}
+                  {format(calendarSelection.startDate, 'yyyy.MM.dd')}
                   {calendarSelection.endDate && ` ~ ${format(calendarSelection.endDate, 'yyyy.MM.dd')}`}
                 </div>
                 {calendarSelection.days > 0 && (
                   <div style={{ color: '#f1f3f9', fontWeight: 600, marginTop: 4 }}>
-                    총 <strong>{calendarSelection.days}일</strong> (주말·공휴일 제외)
+                    총 {calendarSelection.days}일 (주말·공휴일 제외)
                   </div>
                 )}
               </div>
@@ -317,7 +345,7 @@ export default function LeavesPage() {
             {/* 병가 3일 초과 안내 */}
             {form.leave_type === 'sick' && calendarSelection.days > 3 && (
               <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#fbbf24' }}>
-                ⚠️ 병가 3일 초과 시 진단서 첨부가 필요합니다
+                병가 3일 초과 시 진단서 첨부가 필요합니다
               </div>
             )}
 
@@ -332,7 +360,7 @@ export default function LeavesPage() {
                   cursor: (!calendarSelection.endDate || !form.reason) ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit',
                 }}>
-                {saving ? '신청 중...' : '✓ 휴가 신청'}
+                {saving ? '신청 중...' : '휴가 신청'}
               </button>
             </div>
           </div>

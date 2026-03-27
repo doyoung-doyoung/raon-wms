@@ -1,5 +1,6 @@
 import { auth } from '../auth/[...nextauth]/route'
 import { readSheet, appendRow, updateRow, generateId } from '../../../lib/google/sheets'
+import { sendLeaveStatusEmail } from '../../../lib/email'
 
 const SHEET_ID = process.env.SHEETS_LEAVES_ID
 
@@ -10,7 +11,6 @@ export async function GET(request) {
 
     const leaves = await readSheet(SHEET_ID)
 
-    // 직원은 자기 것만
     const filtered = session.isAdmin
       ? leaves
       : leaves.filter(l => l.employee_email === session.user.email)
@@ -29,7 +29,6 @@ export async function POST(request) {
 
     const body = await request.json()
     const id = generateId()
-    const today = new Date().toISOString().slice(0, 10)
 
     // 5일 전 신청 체크 (병가 제외)
     if (body.leave_type !== 'sick') {
@@ -81,7 +80,7 @@ export async function PATCH(request) {
     }
 
     const body = await request.json()
-    const { id, status } = body
+    const { id, status, rejected_reason } = body
     const today = new Date().toISOString().slice(0, 10)
 
     await updateRow(SHEET_ID, 'Sheet1', id, {
@@ -89,6 +88,27 @@ export async function PATCH(request) {
       approved_by: session.user.name,
       approved_at: today,
     })
+
+    // 이메일 발송 (백그라운드로 처리)
+    try {
+      const leaves = await readSheet(SHEET_ID)
+      const leave = leaves.find(l => l.id === id)
+      if (leave) {
+        await sendLeaveStatusEmail({
+          to:             leave.employee_email,
+          name:           leave.employee_name,
+          leaveType:      leave.leave_type,
+          startDate:      leave.start_date,
+          endDate:        leave.end_date,
+          days:           leave.days,
+          status,
+          rejectedReason: rejected_reason || '',
+        })
+      }
+    } catch (emailError) {
+      console.error('이메일 발송 실패:', emailError)
+      // 이메일 실패해도 승인은 성공으로 처리
+    }
 
     return Response.json({ success: true })
   } catch (error) {
