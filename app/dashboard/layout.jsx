@@ -49,6 +49,9 @@ export default function DashboardLayout({ children }) {
       group: 'documents',
       items: [
         { href: '/documents', icon: '📄', labelKey: 'nav.documents', adminOnly: true },
+        { href: '/documents/my-documents', icon: '🗂️', labelKey: 'nav.myDocuments' },
+        { href: '/documents/request', icon: '📝', labelKey: 'nav.documentRequest' },
+        { href: '/documents/approve', icon: '✅', labelKey: 'nav.documentApprove', adminOnly: true },
         { href: '/warnings', icon: '⚠️', labelKey: 'nav.warnings' },
         { href: '/expenses', icon: '💰', labelKey: 'nav.expenses' },
       ]
