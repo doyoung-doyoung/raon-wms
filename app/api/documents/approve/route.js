@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 import { renderToBuffer } from '@react-pdf/renderer'
 import React from 'react'
-import SalaryCertificatePDF from '../../../../lib/pdf/salaryCertificate'
-import PayslipPDF from '../../../../lib/pdf/payslip'
+import SalaryCertificatePDF from '../../../../lib/pdf/salaryCertificate.jsx'
+import PayslipPDF from '../../../../lib/pdf/payslip.jsx'
 import { uploadPDFToDrive } from '../../../../lib/google/drive'
 import { sendMail } from '../../../../lib/email'
+
+export const runtime = 'nodejs'
 
 const SHEET_ID = process.env.SHEETS_DOCUMENTS_ID
 const SHEET_NAME = '문서발급요청'
@@ -14,14 +16,12 @@ const EMP_SHEET_ID = process.env.SHEETS_EMPLOYEES_ID
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { requestId, approved, directorId, rejectReason } = body
+    const { requestId, approved, directorId } = body
 
-    // 요청 정보 가져오기
     const requests = await readSheet(SHEET_ID, SHEET_NAME)
     const req = requests.find(r => r.id === requestId)
     if (!req) return NextResponse.json({ success: false, error: '요청을 찾을 수 없어요.' }, { status: 404 })
 
-    // 반려 처리
     if (!approved) {
       await updateRow(SHEET_ID, SHEET_NAME, requestId, {
         ...req,
@@ -32,15 +32,13 @@ export async function POST(request) {
       return NextResponse.json({ success: true, status: 'rejected' })
     }
 
-    // 직원 정보 가져오기
-    const employees = await readSheet(EMP_SHEET_ID, 'employees')
+    const employees = await readSheet(EMP_SHEET_ID, 'Sheet1')
     const emp = employees.find(e => e.id === req.employeeId)
     if (!emp) return NextResponse.json({ success: false, error: '직원 정보를 찾을 수 없어요.' }, { status: 404 })
 
-    const directors = await readSheet(EMP_SHEET_ID, 'employees')
+    const directors = await readSheet(EMP_SHEET_ID, 'Sheet1')
     const director = directors.find(e => e.id === directorId)
 
-    // 날짜 포맷
     const now = new Date()
     const thaiYear = now.getFullYear() + 543
     const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
@@ -50,25 +48,24 @@ export async function POST(request) {
 
     let pdfBuffer, fileName, folderName
 
-    // 문서 종류별 PDF 생성
     if (req.documentType === 'salary-certificate') {
       const data = {
         issueDate: issueDateTh,
         issueDateEn: issueDateEn,
-        nameTh: emp.nameTh || emp.name,
-        nameEn: emp.nameEn || emp.name,
-        employeeId: emp.employeeId || emp.id,
-        idCardAddress: emp.idCardAddress || '-',
-        currentAddress: emp.currentAddress || '-',
-        startDateTh: emp.startDateTh || emp.startDate,
-        startDateEn: emp.startDateEn || emp.startDate,
+        nameTh: emp.name_th || emp.name_ko || emp.name,
+        nameEn: emp.name_en || emp.name,
+        employeeId: emp.id,
+        idCardAddress: emp.idCardAddress || emp.address || '-',
+        currentAddress: emp.currentAddress || emp.address || '-',
+        startDateTh: emp.start_date || '-',
+        startDateEn: emp.start_date || '-',
         position: emp.position,
         salary: emp.salary,
-        directorName: director?.nameEn || director?.name,
+        directorName: director?.name_en || director?.name_ko || director?.name,
         directorRole: director?.position || 'Managing Director',
       }
       pdfBuffer = await renderToBuffer(React.createElement(SalaryCertificatePDF, { data }))
-      fileName = `${emp.nameEn}_재직증명서_${now.toISOString().slice(0,10)}.pdf`
+      fileName = `${emp.name_en || emp.name_ko}_재직증명서_${now.toISOString().slice(0,10)}.pdf`
       folderName = '재직증명서'
 
     } else if (req.documentType === 'payslip') {
@@ -76,27 +73,25 @@ export async function POST(request) {
         periodTh: `${thaiMonths[now.getMonth()]} ${thaiYear}`,
         periodEn: `${enMonths[now.getMonth()]} ${now.getFullYear()}`,
         payDateTh: issueDateTh,
-        nameTh: emp.nameTh || emp.name,
-        nameEn: emp.nameEn || emp.name,
-        employeeId: emp.employeeId || emp.id,
+        nameTh: emp.name_th || emp.name_ko || emp.name,
+        nameEn: emp.name_en || emp.name,
+        employeeId: emp.id,
         position: emp.position,
-        startDateTh: emp.startDateTh || emp.startDate,
-        startDateEn: emp.startDateEn || emp.startDate,
+        startDateTh: emp.start_date || '-',
+        startDateEn: emp.start_date || '-',
         baseSalary: Number(emp.salary) || 0,
         housing: 0, transport: 0, meal: 0, ot: 0, otherIncome: 0,
         tax: 0, socialSecurity: 750, otherDeduction: 0,
-        directorName: director?.nameEn || director?.name,
+        directorName: director?.name_en || director?.name_ko || director?.name,
         directorRole: director?.position || 'Managing Director',
       }
       pdfBuffer = await renderToBuffer(React.createElement(PayslipPDF, { data }))
-      fileName = `${emp.nameEn}_월급명세서_${now.toISOString().slice(0,10)}.pdf`
+      fileName = `${emp.name_en || emp.name_ko}_월급명세서_${now.toISOString().slice(0,10)}.pdf`
       folderName = '월급명세서'
     }
 
-    // Drive 업로드
     const { driveUrl } = await uploadPDFToDrive(pdfBuffer, fileName, folderName)
 
-    // Sheets 업데이트
     await updateRow(SHEET_ID, SHEET_NAME, requestId, {
       ...req,
       status: 'approved',
@@ -106,7 +101,6 @@ export async function POST(request) {
       fileName,
     })
 
-    // 이메일 발송
     if (emp.email) {
       await sendMail({
         to: emp.email,
@@ -114,7 +108,7 @@ export async function POST(request) {
         html: `
           <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #4f62f7;">서류 발급 완료</h2>
-            <p>안녕하세요, <strong>${emp.nameTh || emp.name}</strong>님!</p>
+            <p>안녕하세요, <strong>${emp.name_th || emp.name_ko}</strong>님!</p>
             <p>요청하신 <strong>${req.documentType === 'salary-certificate' ? '재직증명서' : '월급명세서'}</strong>가 발급되었습니다.</p>
             <div style="margin: 20px 0;">
               <a href="${driveUrl}" style="background: #4f62f7; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
@@ -132,4 +126,4 @@ export async function POST(request) {
     console.error('approve error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
-}
+}export const dynamic = 'force-dynamic'

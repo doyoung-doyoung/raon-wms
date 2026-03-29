@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { auth } from '../../../api/auth/[...nextauth]/route'
+import { auth } from '../../auth/[...nextauth]/route'
 import { readSheet } from '../../../../lib/google/sheets'
 
 const SHEET_ID = process.env.SHEETS_EMPLOYEES_ID

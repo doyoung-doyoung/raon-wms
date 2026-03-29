@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 const DOC_TYPES = {
   'salary-certificate': '재직증명서',
@@ -9,22 +10,26 @@ const DOC_TYPES = {
 
 export default function DocumentApprovePage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [requests, setRequests] = useState([])
-  const [directors, setDirectors] = useState([])
-  const [selectedDirector, setSelectedDirector] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [myInfo, setMyInfo] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState(null)
+  const [notDirector, setNotDirector] = useState(false)
 
   useEffect(() => {
-    loadRequests()
-    fetch('/api/employees')
+    if (!session?.user?.email) return
+    fetch('/api/employees/me')
       .then(r => r.json())
       .then(data => {
-        const dirs = (data.employees || []).filter(e => e.isDirector === true || e.isDirector === 'true')
-        setDirectors(dirs)
-        if (dirs.length > 0) setSelectedDirector(dirs[0].id)
+        const emp = data.employee
+        if (!emp) { setNotDirector(true); setLoading(false); return }
+        const isDir = emp.isDirector === 'true' || emp.isDirector === true || String(emp.isDirector).toLowerCase() === 'true'
+        if (!isDir) { setNotDirector(true); setLoading(false); return }
+        setMyInfo(emp)
+        loadRequests()
       })
-  }, [])
+  }, [session])
 
   async function loadRequests() {
     setLoading(true)
@@ -38,7 +43,7 @@ export default function DocumentApprovePage() {
   }
 
   async function handleApprove(requestId, approved) {
-    if (!selectedDirector) return alert('승인자를 선택해주세요.')
+    if (!myInfo) return alert('이사 정보를 찾을 수 없어요.')
     setProcessingId(requestId)
     try {
       const res = await fetch('/api/documents/approve', {
@@ -47,7 +52,7 @@ export default function DocumentApprovePage() {
         body: JSON.stringify({
           requestId,
           approved,
-          directorId: selectedDirector,
+          directorId: myInfo.id,
         }),
       })
       const data = await res.json()
@@ -64,40 +69,24 @@ export default function DocumentApprovePage() {
     }
   }
 
-  function statusBadge(status) {
-    const map = {
-      pending: { label: '대기 중', bg: '#2d3a6b', color: '#818cf8' },
-      approved: { label: '승인 완료', bg: '#1a3a2a', color: '#4ade80' },
-      rejected: { label: '반려', bg: '#3a1a1a', color: '#f87171' },
-    }
-    const s = map[status] || map.pending
+  if (notDirector) {
     return (
-      <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
-        {s.label}
-      </span>
+      <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center', padding: 60 }}>
+        <div style={{ fontSize: 32, marginBottom: 16 }}>🚫</div>
+        <div style={{ color: '#f87171', fontSize: 15 }}>이사/관리자만 접근할 수 있어요.</div>
+      </div>
     )
   }
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
       <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9', marginBottom: 8 }}>서류 발급 승인</h1>
-      <p style={{ fontSize: 13, color: '#8b91ab', marginBottom: 24 }}>대기 중인 서류 발급 요청을 승인하거나 반려할 수 있어요.</p>
+      {myInfo && (
+        <p style={{ fontSize: 13, color: '#8b91ab', marginBottom: 24 }}>
+          승인자: <span style={{ color: '#818cf8', fontWeight: 600 }}>{myInfo.name_en || myInfo.name_ko} ({myInfo.position})</span>
+        </p>
+      )}
 
-      {/* 승인자 선택 */}
-      <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '16px 20px', marginBottom: 24 }}>
-        <label style={{ fontSize: 13, color: '#8b91ab', marginBottom: 8, display: 'block' }}>승인자 (서명)</label>
-        <select
-          value={selectedDirector}
-          onChange={e => setSelectedDirector(e.target.value)}
-          style={{ width: '100%', background: '#0d1020', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px', color: '#f1f3f9', fontSize: 14 }}
-        >
-          {directors.map(d => (
-            <option key={d.id} value={d.id}>{d.nameEn || d.name} ({d.position})</option>
-          ))}
-        </select>
-      </div>
-
-      {/* 요청 목록 */}
       {loading ? (
         <div style={{ textAlign: 'center', color: '#8b91ab', padding: 40 }}>로딩 중...</div>
       ) : requests.length === 0 ? (
@@ -117,7 +106,9 @@ export default function DocumentApprovePage() {
                     {DOC_TYPES[req.documentType] || req.documentType}
                   </div>
                 </div>
-                {statusBadge(req.status)}
+                <span style={{ background: '#2d3a6b', color: '#818cf8', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>
+                  대기 중
+                </span>
               </div>
 
               {req.requestNote && (

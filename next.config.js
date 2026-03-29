@@ -11,6 +11,6 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
+  serverExternalPackages: ['@react-pdf/renderer'],
 }
-
 module.exports = nextConfig
