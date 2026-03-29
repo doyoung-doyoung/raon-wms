@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
-import { renderToBuffer } from '@react-pdf/renderer'
-import React from 'react'
-import SalaryCertificatePDF from '../../../../lib/pdf/salaryCertificate.jsx'
-import PayslipPDF from '../../../../lib/pdf/payslip.jsx'
+import { generateSalaryCertificate, generatePayslip } from '../../../../lib/pdf/generate.js'
 import { uploadPDFToDrive } from '../../../../lib/google/drive'
 import { sendMail } from '../../../../lib/email'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const SHEET_ID = process.env.SHEETS_DOCUMENTS_ID
 const SHEET_NAME = '문서발급요청'
@@ -36,15 +34,16 @@ export async function POST(request) {
     const emp = employees.find(e => e.id === req.employeeId)
     if (!emp) return NextResponse.json({ success: false, error: '직원 정보를 찾을 수 없어요.' }, { status: 404 })
 
-    const directors = await readSheet(EMP_SHEET_ID, 'Sheet1')
-    const director = directors.find(e => e.id === directorId)
-
     const now = new Date()
     const thaiYear = now.getFullYear() + 543
     const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
     const enMonths = ['January','February','March','April','May','June','July','August','September','October','November','December']
     const issueDateTh = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${thaiYear}`
     const issueDateEn = `${now.getDate()} ${enMonths[now.getMonth()]} ${now.getFullYear()}`
+
+    // 관리자 이름 (directorId는 이메일)
+    const adminName = process.env.ADMIN_NAME || 'Doyoung Jung'
+    const adminRole = 'Managing Director'
 
     let pdfBuffer, fileName, folderName
 
@@ -61,10 +60,10 @@ export async function POST(request) {
         startDateEn: emp.start_date || '-',
         position: emp.position,
         salary: emp.salary,
-        directorName: director?.name_en || director?.name_ko || director?.name,
-        directorRole: director?.position || 'Managing Director',
+        directorName: adminName,
+        directorRole: adminRole,
       }
-      pdfBuffer = await renderToBuffer(React.createElement(SalaryCertificatePDF, { data }))
+      pdfBuffer = await generateSalaryCertificate(data)
       fileName = `${emp.name_en || emp.name_ko}_재직증명서_${now.toISOString().slice(0,10)}.pdf`
       folderName = '재직증명서'
 
@@ -82,10 +81,10 @@ export async function POST(request) {
         baseSalary: Number(emp.salary) || 0,
         housing: 0, transport: 0, meal: 0, ot: 0, otherIncome: 0,
         tax: 0, socialSecurity: 750, otherDeduction: 0,
-        directorName: director?.name_en || director?.name_ko || director?.name,
-        directorRole: director?.position || 'Managing Director',
+        directorName: adminName,
+        directorRole: adminRole,
       }
-      pdfBuffer = await renderToBuffer(React.createElement(PayslipPDF, { data }))
+      pdfBuffer = await generatePayslip(data)
       fileName = `${emp.name_en || emp.name_ko}_월급명세서_${now.toISOString().slice(0,10)}.pdf`
       folderName = '월급명세서'
     }
@@ -126,4 +125,4 @@ export async function POST(request) {
     console.error('approve error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
-}export const dynamic = 'force-dynamic'
+}

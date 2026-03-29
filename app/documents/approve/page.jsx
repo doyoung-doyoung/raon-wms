@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 
 const DOC_TYPES = {
   'salary-certificate': '재직증명서',
@@ -10,25 +9,13 @@ const DOC_TYPES = {
 
 export default function DocumentApprovePage() {
   const { data: session } = useSession()
-  const router = useRouter()
   const [requests, setRequests] = useState([])
-  const [myInfo, setMyInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState(null)
-  const [notDirector, setNotDirector] = useState(false)
 
   useEffect(() => {
-    if (!session?.user?.email) return
-    fetch('/api/employees/me')
-      .then(r => r.json())
-      .then(data => {
-        const emp = data.employee
-        if (!emp) { setNotDirector(true); setLoading(false); return }
-        const isDir = emp.isDirector === 'true' || emp.isDirector === true || String(emp.isDirector).toLowerCase() === 'true'
-        if (!isDir) { setNotDirector(true); setLoading(false); return }
-        setMyInfo(emp)
-        loadRequests()
-      })
+    if (session?.isAdmin) loadRequests()
+    else setLoading(false)
   }, [session])
 
   async function loadRequests() {
@@ -43,7 +30,6 @@ export default function DocumentApprovePage() {
   }
 
   async function handleApprove(requestId, approved) {
-    if (!myInfo) return alert('이사 정보를 찾을 수 없어요.')
     setProcessingId(requestId)
     try {
       const res = await fetch('/api/documents/approve', {
@@ -52,7 +38,7 @@ export default function DocumentApprovePage() {
         body: JSON.stringify({
           requestId,
           approved,
-          directorId: myInfo.id,
+          directorId: session.user.email,
         }),
       })
       const data = await res.json()
@@ -69,11 +55,11 @@ export default function DocumentApprovePage() {
     }
   }
 
-  if (notDirector) {
+  if (!session?.isAdmin) {
     return (
       <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center', padding: 60 }}>
         <div style={{ fontSize: 32, marginBottom: 16 }}>🚫</div>
-        <div style={{ color: '#f87171', fontSize: 15 }}>이사/관리자만 접근할 수 있어요.</div>
+        <div style={{ color: '#f87171', fontSize: 15 }}>관리자만 접근할 수 있어요.</div>
       </div>
     )
   }
@@ -81,11 +67,9 @@ export default function DocumentApprovePage() {
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
       <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9', marginBottom: 8 }}>서류 발급 승인</h1>
-      {myInfo && (
-        <p style={{ fontSize: 13, color: '#8b91ab', marginBottom: 24 }}>
-          승인자: <span style={{ color: '#818cf8', fontWeight: 600 }}>{myInfo.name_en || myInfo.name_ko} ({myInfo.position})</span>
-        </p>
-      )}
+      <p style={{ fontSize: 13, color: '#8b91ab', marginBottom: 24 }}>
+        승인자: <span style={{ color: '#818cf8', fontWeight: 600 }}>{session?.user?.name}</span>
+      </p>
 
       {loading ? (
         <div style={{ textAlign: 'center', color: '#8b91ab', padding: 40 }}>로딩 중...</div>
