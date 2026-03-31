@@ -1,11 +1,13 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
-import { DocHeader, Watermark, numToThaiWords } from './utils'
+import React from 'react'
+import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
+import { DocHeader, Watermark, numToThaiWords } from './utils.jsx'
+import path from 'path'
 
 const styles = StyleSheet.create({
   page: {
     padding: 50,
     fontSize: 11,
-    fontFamily: 'Helvetica',
+    fontFamily: 'Sarabun',
     position: 'relative',
   },
   titleTh: {
@@ -120,14 +122,13 @@ const styles = StyleSheet.create({
   },
   sigArea: {
     marginTop: 20,
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
-  sigLabel: {
-    fontSize: 10,
-    color: '#666666',
-    marginBottom: 30,
-    textAlign: 'center',
-    width: 160,
+  sigImage: {
+    width: 100,
+    height: 50,
+    marginBottom: 2,
+    alignSelf: 'center',
   },
   sigLine: {
     borderBottomWidth: 1,
@@ -150,31 +151,19 @@ const styles = StyleSheet.create({
 
 export default function PayslipPDF({ data }) {
   const {
-    periodTh,
-    periodEn,
-    payDateTh,
-    nameTh,
-    nameEn,
-    employeeId,
-    position,
+    periodTh, periodEn, payDateTh,
+    nameTh, nameEn, employeeId, position,
     startDateTh,
-    startDateEn,
-    baseSalary = 0,
-    housing = 0,
-    transport = 0,
-    meal = 0,
-    ot = 0,
-    otherIncome = 0,
-    tax = 0,
-    socialSecurity = 0,
-    otherDeduction = 0,
-    directorName,
-    directorRole,
+    baseSalary = 0, housing = 0, transport = 0,
+    meal = 0, ot = 0, otherIncome = 0,
+    tax = 0, socialSecurity = 0, otherDeduction = 0,
+    directorName, directorRole,
   } = data
 
   const totalIncome = baseSalary + housing + transport + meal + ot + otherIncome
   const totalDeduction = tax + socialSecurity + otherDeduction
   const netPay = totalIncome - totalDeduction
+  const sigPath = path.join(process.cwd(), 'public', 'signature.jpg')
 
   return (
     <Document>
@@ -185,7 +174,7 @@ export default function PayslipPDF({ data }) {
         <Text style={styles.titleTh}>สลิปเงินเดือน</Text>
         <Text style={styles.titleEn}>Payslip</Text>
         <Text style={styles.periodBar}>
-          {periodTh} / {periodEn}  |  วันที่จ่าย / Pay date: {payDateTh}
+          วันที่จ่าย / Pay date: {payDateTh}
         </Text>
 
         <View style={styles.empBox}>
@@ -203,7 +192,7 @@ export default function PayslipPDF({ data }) {
           </View>
           <View style={styles.empRow}>
             <Text style={styles.empLabel}>วันที่เริ่มงาน / Start date</Text>
-            <Text style={styles.empVal}>{startDateTh} / {startDateEn}</Text>
+            <Text style={styles.empVal}>{startDateTh}</Text>
           </View>
         </View>
 
@@ -243,6 +232,7 @@ export default function PayslipPDF({ data }) {
 
         <View style={styles.sigArea}>
           <Text style={styles.sigLabel}>ผู้อนุมัติ / Approved by</Text>
+          <Image style={styles.sigImage} src={sigPath} />
           <View style={styles.sigLine} />
           <Text style={styles.sigName}>{directorName}</Text>
           <Text style={styles.sigRole}>{directorRole}</Text>

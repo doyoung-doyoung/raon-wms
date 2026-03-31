@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 import { generateSalaryCertificate, generatePayslip } from '../../../../lib/pdf/generate.js'
-import { uploadPDFToDrive } from '../../../../lib/google/drive'
 import { sendMail } from '../../../../lib/email'
 
 export const runtime = 'nodejs'
@@ -41,11 +40,10 @@ export async function POST(request) {
     const issueDateTh = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${thaiYear}`
     const issueDateEn = `${now.getDate()} ${enMonths[now.getMonth()]} ${now.getFullYear()}`
 
-    // 관리자 이름 (directorId는 이메일)
     const adminName = process.env.ADMIN_NAME || 'Doyoung Jung'
     const adminRole = 'Managing Director'
 
-    let pdfBuffer, fileName, folderName
+    let pdfBuffer, fileName, docLabel
 
     if (req.documentType === 'salary-certificate') {
       const data = {
@@ -53,19 +51,19 @@ export async function POST(request) {
         issueDateEn: issueDateEn,
         nameTh: emp.name_th || emp.name_ko || emp.name,
         nameEn: emp.name_en || emp.name,
-        employeeId: emp.id,
+        employeeId: emp.national_id || emp.id,
         idCardAddress: emp.idCardAddress || emp.address || '-',
         currentAddress: emp.currentAddress || emp.address || '-',
         startDateTh: emp.start_date || '-',
         startDateEn: emp.start_date || '-',
-        position: emp.position,
+        position: emp.position_en || emp.position,
         salary: emp.salary,
         directorName: adminName,
         directorRole: adminRole,
       }
       pdfBuffer = await generateSalaryCertificate(data)
-      fileName = `${emp.name_en || emp.name_ko}_재직증명서_${now.toISOString().slice(0,10)}.pdf`
-      folderName = '재직증명서'
+      fileName = `${emp.name_en || emp.name_ko}_salary-certificate_${now.toISOString().slice(0,10)}.pdf`
+      docLabel = 'หนังสือรับรองเงินเดือน (Salary Certificate)'
 
     } else if (req.documentType === 'payslip') {
       const data = {
@@ -74,53 +72,57 @@ export async function POST(request) {
         payDateTh: issueDateTh,
         nameTh: emp.name_th || emp.name_ko || emp.name,
         nameEn: emp.name_en || emp.name,
-        employeeId: emp.id,
+        employeeId: emp.national_id || emp.id,
         position: emp.position,
         startDateTh: emp.start_date || '-',
         startDateEn: emp.start_date || '-',
         baseSalary: Number(emp.salary) || 0,
         housing: 0, transport: 0, meal: 0, ot: 0, otherIncome: 0,
-        tax: 0, socialSecurity: 750, otherDeduction: 0,
+        tax: 0, socialSecurity: 875, otherDeduction: 0,
         directorName: adminName,
         directorRole: adminRole,
       }
       pdfBuffer = await generatePayslip(data)
-      fileName = `${emp.name_en || emp.name_ko}_월급명세서_${now.toISOString().slice(0,10)}.pdf`
-      folderName = '월급명세서'
+      fileName = `${emp.name_en || emp.name_ko}_payslip_${now.toISOString().slice(0,10)}.pdf`
+      docLabel = 'สลิปเงินเดือน (Payslip)'
     }
 
-    const { driveUrl } = await uploadPDFToDrive(pdfBuffer, fileName, folderName)
-
+    // Sheets 업데이트 (driveUrl 없이)
     await updateRow(SHEET_ID, SHEET_NAME, requestId, {
       ...req,
       status: 'approved',
       approvedAt: new Date().toISOString(),
       approvedBy: directorId,
-      driveUrl,
+      driveUrl: '',
       fileName,
     })
 
+    // PDF 이메일 첨부 발송
     if (emp.email) {
       await sendMail({
         to: emp.email,
-        subject: `[RAON] ${req.documentType === 'salary-certificate' ? '재직증명서' : '월급명세서'} 발급 완료`,
+        subject: `[RAON] ${docLabel} - Document Issued`,
         html: `
           <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #4f62f7;">서류 발급 완료</h2>
-            <p>안녕하세요, <strong>${emp.name_th || emp.name_ko}</strong>님!</p>
-            <p>요청하신 <strong>${req.documentType === 'salary-certificate' ? '재직증명서' : '월급명세서'}</strong>가 발급되었습니다.</p>
-            <div style="margin: 20px 0;">
-              <a href="${driveUrl}" style="background: #4f62f7; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
-                Google Drive에서 보기
-              </a>
-            </div>
-            <p style="color: #888; font-size: 12px;">RAON (Thailand) Co., Ltd.</p>
+            <h2 style="color: #4f62f7;">Document Issued / เอกสารได้รับการอนุมัติแล้ว</h2>
+            <p>เรียน คุณ <strong>${emp.name_th || emp.name_ko}</strong>,</p>
+            <p>เอกสาร <strong>${docLabel}</strong> ของท่านได้รับการอนุมัติและออกให้เรียบร้อยแล้ว</p>
+            <p>กรุณาตรวจสอบเอกสารแนบในอีเมลนี้</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
+            <p style="color: #888; font-size: 12px;">RAON (Thailand) Co., Ltd.<br/>raonthailand23@gmail.com</p>
           </div>
         `,
+        attachments: [
+          {
+            filename: fileName,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          }
+        ],
       })
     }
 
-    return NextResponse.json({ success: true, driveUrl, fileName })
+    return NextResponse.json({ success: true, fileName })
   } catch (error) {
     console.error('approve error:', error)
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
