@@ -8,6 +8,7 @@ export default function WarningsPage() {
   const isAdmin = session?.isAdmin
 
   const [warnings, setWarnings] = useState([])
+  const [employees, setEmployees] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [selected, setSelected] = useState(null)
@@ -19,7 +20,18 @@ export default function WarningsPage() {
     reason1: '', reason2: '', reason3: '',
   })
 
-  useEffect(() => { fetchWarnings() }, [session])
+  useEffect(() => {
+    fetchWarnings()
+    if (isAdmin) fetchEmployees()
+  }, [session])
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch('/api/employees')
+      const data = await res.json()
+      setEmployees(Array.isArray(data) ? data : [])
+    } catch (e) { console.error(e) }
+  }
 
   const fetchWarnings = async () => {
     setLoading(true)
@@ -266,34 +278,73 @@ export default function WarningsPage() {
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>x</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              {[
-                { key: 'employeeName', label: '직원 이름 *', placeholder: '홍길동' },
-                { key: 'position', label: '직책', placeholder: 'Designer' },
-                { key: 'employeeEmail', label: '직원 이메일 *', placeholder: 'employee@raon.co.th' },
-                { key: 'startDate', label: '입사일', type: 'date' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>{f.label}</label>
-                  <input
-                    type={f.type || 'text'}
-                    value={form[f.key]}
-                    onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                    placeholder={f.placeholder}
-                    style={{ width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 12px', color: '#f1f3f9', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-                  />
-                </div>
-              ))}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>직원 선택 *</label>
+              <select
+                value={form.employeeEmail}
+                onChange={e => {
+                  const emp = employees.find(emp => emp.email === e.target.value)
+                  if (emp) {
+                    setForm(p => ({
+                      ...p,
+                      employeeEmail: emp.email,
+                      employeeName: emp.name_ko || emp.name_th || emp.name_en || '',
+                      position: emp.position || '',
+                      startDate: emp.start_date || '',
+                      address: emp.currentAddress || emp.address || '',
+                    }))
+                  } else {
+                    setForm(p => ({ ...p, employeeEmail: '', employeeName: '', position: '', startDate: '', address: '' }))
+                  }
+                }}
+                style={{ width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 12px', color: form.employeeEmail ? '#f1f3f9' : '#8b91ab', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              >
+                <option value="">직원을 선택하세요</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.email}>
+                    {emp.name_ko || emp.name_th || emp.name_en} ({emp.position || '-'})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {['reason1', 'reason2', 'reason3'].map((key, i) => (
-              <div key={key} style={{ marginBottom: 12 }}>
-                <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>사유 {i + 1}{i === 0 ? ' *' : ' (선택)'}</label>
-                <input
-                  value={form[key]}
-                  onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                  placeholder={i === 0 ? '무단결근 3일 이상...' : '추가 사유'}
-                  style={{ width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 12px', color: '#f1f3f9', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+            {form.employeeEmail && (
+              <div style={{ background: 'rgba(79,98,247,0.06)', border: '1px solid rgba(79,98,247,0.15)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[
+                  { label: '이름', value: form.employeeName },
+                  { label: '직책', value: form.position },
+                  { label: '이메일', value: form.employeeEmail },
+                  { label: '입사일', value: form.startDate },
+                ].map(item => (
+                  <div key={item.label}>
+                    <span style={{ fontSize: 11, color: '#8b91ab' }}>{item.label}: </span>
+                    <span style={{ fontSize: 12, color: '#c4c7d6' }}>{item.value || '-'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {[
+              { key: 'reason1', label: '사유 1 *', placeholder: '무단결근 3일 이상...' },
+              { key: 'reason2', label: '사유 2 (선택)', placeholder: '추가 사유' },
+              { key: 'reason3', label: '사유 3 (선택)', placeholder: '추가 사유' },
+            ].map((f, i) => (
+              <div key={f.key} style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>{f.label}</label>
+                <textarea
+                  value={form[f.key]}
+                  onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder}
+                  rows={3}
+                  style={{
+                    width: '100%', background: '#141828',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 8, padding: '8px 12px',
+                    color: '#f1f3f9', fontSize: 13, outline: 'none',
+                    fontFamily: 'inherit', boxSizing: 'border-box',
+                    resize: 'vertical', lineHeight: 1.6,
+                    maxHeight: 160, overflowY: 'auto',
+                  }}
                 />
               </div>
             ))}

@@ -1,6 +1,10 @@
 import { auth } from '../auth/[...nextauth]/route'
 import { readSheet, appendRow, updateRow, generateId } from '../../../lib/google/sheets'
+import { generateWarningLetter } from '../../../lib/pdf/generate.js'
 import nodemailer from 'nodemailer'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const SHEET_ID = process.env.SHEETS_WARNINGS_ID
 
@@ -13,7 +17,7 @@ const transporter = nodemailer.createTransport({
 })
 
 // 경고장 이메일 발송
-async function sendWarningEmail({ to, employeeName, position, warningNumber, reason1, reason2, reason3, directorName, issuedAt }) {
+async function sendWarningEmail({ to, employeeName, position, warningNumber, reason1, reason2, reason3, directorName, issuedAt, pdfBuffer, fileName }) {
   const warningLabel = ['1차', '2차', '3차'][warningNumber - 1] || `${warningNumber}차`
 
   const html = `
@@ -33,19 +37,30 @@ async function sendWarningEmail({ to, employeeName, position, warningNumber, rea
         </div>
         <p style="font-size: 13px; color: #6b7280;">발행일: ${issuedAt}</p>
         <p style="font-size: 13px; color: #6b7280;">담당자: ${directorName}</p>
+        <p style="font-size: 12px; color: #9ca3af; margin-top: 16px;">경고장 PDF가 첨부되어 있습니다.</p>
       </div>
       <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 16px;">
-        RAON Co., Ltd. | ${process.env.COMPANY_ADDRESS}
+        RAON Co., Ltd. | 349 อาคารเอสเจ ชั้นที่ 29 | raonthailand23@gmail.com
       </p>
     </div>
   `
 
-  await transporter.sendMail({
+  const mailOptions = {
     from: `"RAON WMS" <${process.env.GMAIL_USER}>`,
     to,
     subject: `[RAON] 경고장 ${warningLabel} - ${employeeName}`,
     html,
-  })
+  }
+
+  if (pdfBuffer && fileName) {
+    mailOptions.attachments = [{
+      filename: fileName,
+      content: pdfBuffer,
+      contentType: 'application/pdf',
+    }]
+  }
+
+  await transporter.sendMail(mailOptions)
 }
 
 // 병가 자동 감지 - 3일 연속 결근 체크
@@ -232,6 +247,36 @@ export async function POST(request) {
 
     await appendRow(SHEET_ID, 'Sheet1', newWarning)
 
+    // PDF 생성
+    const now2 = new Date()
+    const thaiYear = now2.getFullYear() + 543
+    const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
+    const enMonths = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    const issueDateTh = `วันที่ ${now2.getDate()} ${thaiMonths[now2.getMonth()]} พ.ศ. ${thaiYear}`
+    const issueDateEn = `${now2.getDate()} ${enMonths[now2.getMonth()]} ${now2.getFullYear()}`
+    const directorName = process.env.ADMIN_NAME || 'Doyoung Jung'
+
+    let pdfBuffer = null
+    let fileName = null
+    try {
+      pdfBuffer = await generateWarningLetter({
+        issueDate: issueDateTh,
+        issueDateEn,
+        employeeName: employeeName,
+        employeeNameEn: '',
+        position: position || '',
+        startDate: startDate || today,
+        address: address || '',
+        warningNumber,
+        reason1, reason2: reason2 || '', reason3: reason3 || '',
+        directorName,
+        directorRole: 'กรรมการบริษัท (Managing Director)',
+      })
+      fileName = `warning_${warningNumber}_${employeeName}_${today}.pdf`
+    } catch (pdfErr) {
+      console.error('경고장 PDF 생성 실패:', pdfErr)
+    }
+
     try {
       await sendWarningEmail({
         to: employeeEmail,
@@ -239,6 +284,8 @@ export async function POST(request) {
         reason1, reason2, reason3,
         directorName: session.user.name,
         issuedAt: today,
+        pdfBuffer,
+        fileName,
       })
     } catch (emailError) {
       console.error('경고장 이메일 발송 실패:', emailError)
