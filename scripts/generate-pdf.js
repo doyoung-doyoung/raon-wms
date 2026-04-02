@@ -28,6 +28,9 @@ async function run() {
     } else if (type === 'payslip') {
       const mod = await import('../lib/pdf/payslip.jsx')
       Component = mod.default
+    } else if (type === 'announcement') {
+      const mod = await import('../lib/pdf/announcement.jsx')
+      Component = mod.default
     }
 
     const element = createElement(Component, { data })

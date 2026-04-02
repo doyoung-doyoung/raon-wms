@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const [checking, setChecking] = useState(false)
   const [balance, setBalance] = useState(null)
   const [adminStats, setAdminStats] = useState({ employees: 0, todayAttendance: 0, onLeave: 0, pendingLeaves: 0 })
+  const [announcements, setAnnouncements] = useState([])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (session) {
       fetchTodayAttendance()
+      fetchAnnouncements()
       if (!session.isAdmin) fetchBalance()
       if (session.isAdmin) fetchAdminStats()
     }
@@ -32,6 +34,14 @@ export default function DashboardPage() {
       const list = Array.isArray(data) ? data : []
       const mine = list.find(r => r.employee_id === session?.user?.email)
       setTodayRecord(mine || null)
+    } catch (e) { console.error(e) }
+  }
+
+  const fetchAnnouncements = async () => {
+    try {
+      const res = await fetch('/api/announcements')
+      const data = await res.json()
+      setAnnouncements(Array.isArray(data) ? data.slice(0, 5) : [])
     } catch (e) { console.error(e) }
   }
 
@@ -122,7 +132,6 @@ export default function DashboardPage() {
         { label: '이번달 출근', value: '- 일', icon: '📅', color: '#8b5cf6' },
       ]
 
-  const announcements = []
   const checkedIn = !!todayRecord
   const checkedOut = !!todayRecord?.check_out
 
@@ -213,15 +222,7 @@ export default function DashboardPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>공지사항</h2>
-          {isAdmin && (
-            <button style={{
-              padding: '5px 12px', background: 'rgba(79,98,247,0.15)', color: '#818cf8',
-              border: '1px solid rgba(79,98,247,0.25)', borderRadius: 7,
-              fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-            }}>
-              + 공지 작성
-            </button>
-          )}
+          <a href="/announcements" style={{ fontSize: 12, color: '#818cf8', textDecoration: 'none' }}>전체보기</a>
         </div>
         {announcements.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0', color: '#8b91ab', fontSize: 13 }}>
@@ -229,10 +230,23 @@ export default function DashboardPage() {
           </div>
         ) : (
           announcements.map(a => (
-            <div key={a.id} style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontWeight: 600, color: '#f1f3f9', marginBottom: 2 }}>{a.title}</div>
-              <div style={{ fontSize: 12, color: '#8b91ab' }}>{a.date}</div>
-            </div>
+            <a key={a.id} href="/announcements" style={{ textDecoration: 'none' }}>
+              <div style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {a.pinned === 'true' && (
+                      <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '1px 6px', borderRadius: 4, fontWeight: 600, flexShrink: 0 }}>고정</span>
+                    )}
+                    <span style={{ fontWeight: 600, color: '#f1f3f9', fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.content}</div>
+                </div>
+                <div style={{ fontSize: 11, color: '#8b91ab', flexShrink: 0, marginLeft: 12 }}>{a.createdAt}</div>
+              </div>
+            </a>
           ))
         )}
       </div>

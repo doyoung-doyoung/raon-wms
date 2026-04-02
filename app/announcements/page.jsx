@@ -2,216 +2,233 @@
 
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
-import { useLang } from '../../lib/i18n/useLang'
-
-// 임시 샘플 데이터 (추후 Google Sheets API 연동)
-const SAMPLE_ANNOUNCEMENTS = [
-  {
-    id: '1',
-    title: '2025년 태국 공휴일 안내',
-    content: '2025년 태국 정부 공휴일 일정을 안내드립니다. 달력을 통해 확인하실 수 있습니다.',
-    author: '이사',
-    authorImage: null,
-    createdAt: '2025-01-02',
-    pinned: true,
-  },
-  {
-    id: '2',
-    title: 'Office Hours 변경 안내',
-    content: '2월부터 사무실 운영 시간이 09:00 ~ 18:00으로 변경됩니다.',
-    author: '이사',
-    authorImage: null,
-    createdAt: '2025-01-15',
-    pinned: false,
-  },
-]
 
 export default function AnnouncementsPage() {
   const { data: session } = useSession()
-  const { t } = useLang()
   const isAdmin = session?.isAdmin
 
-  const [announcements, setAnnouncements] = useState(SAMPLE_ANNOUNCEMENTS)
+  const [announcements, setAnnouncements] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [selected, setSelected] = useState(null) // 선택된 공지 (상세 보기)
-  const [form, setForm] = useState({ title: '', content: '' })
+  const [selected, setSelected] = useState(null)
+  const [form, setForm] = useState({ title: '', content: '', pinned: false })
   const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState('')
+
+  useEffect(() => { fetchAnnouncements() }, [])
+
+  const fetchAnnouncements = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/announcements')
+      const data = await res.json()
+      setAnnouncements(Array.isArray(data) ? data : [])
+    } catch (e) { console.error(e) }
+    setLoading(false)
+  }
 
   const handleSubmit = async () => {
     if (!form.title.trim() || !form.content.trim()) return
     setSaving(true)
-    // TODO: POST /api/announcements
-    const newItem = {
-      id: Date.now().toString(),
-      title: form.title,
-      content: form.content,
-      author: session?.user?.name || '이사',
-      authorImage: session?.user?.image,
-      createdAt: new Date().toISOString().slice(0, 10),
-      pinned: false,
-    }
-    setAnnouncements(prev => [newItem, ...prev])
-    setForm({ title: '', content: '' })
-    setShowForm(false)
+    setSaveMsg('')
+    try {
+      const res = await fetch('/api/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSaveMsg(`공지 등록 완료! 직원 ${data.emailsSent}명에게 이메일 발송됨`)
+        setForm({ title: '', content: '', pinned: false })
+        setShowForm(false)
+        await fetchAnnouncements()
+      } else {
+        alert(data.error || '등록 실패')
+      }
+    } catch (e) { console.error(e) }
     setSaving(false)
   }
 
   const sorted = [...announcements].sort((a, b) => {
-    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+    if (a.pinned !== b.pinned) return a.pinned === 'true' ? -1 : 1
     return b.createdAt.localeCompare(a.createdAt)
   })
 
+  const s = {
+    page: { color: '#f1f3f9' },
+    card: {
+      background: '#141828',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: 14, padding: '16px 20px',
+      cursor: 'pointer', transition: 'all 0.15s', marginBottom: 12,
+    },
+    activeCard: {
+      background: 'rgba(79,98,247,0.08)',
+      border: '1px solid rgba(79,98,247,0.35)',
+      borderRadius: 14, padding: '16px 20px',
+      cursor: 'pointer', marginBottom: 12,
+    },
+    label: { display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 6, fontWeight: 500 },
+    input: { width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '9px 14px', color: '#f1f3f9', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' },
+  }
+
   return (
-    <div>
-      {/* 헤더 */}
+    <div style={s.page}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>
-            📢 {t('announcements.title')}
-          </h1>
-          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{announcements.length}개의 공지사항</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>공지사항</h1>
+          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{announcements.length}개</p>
         </div>
         {isAdmin && (
           <button
             onClick={() => { setShowForm(true); setSelected(null) }}
-            style={{
-              padding: '9px 20px', background: '#4f62f7', color: '#fff',
-              border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}
+            style={{ padding: '9px 20px', background: '#4f62f7', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            + {t('announcements.new')}
+            + 공지 작성
           </button>
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.5fr' : '1fr', gap: 20 }}>
-
-        {/* 목록 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {sorted.length === 0 ? (
-            <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '48px 24px', textAlign: 'center', color: '#8b91ab', fontSize: 14 }}>
-              {t('announcements.noAnnouncements')}
-            </div>
-          ) : sorted.map(item => (
-            <div
-              key={item.id}
-              onClick={() => setSelected(selected?.id === item.id ? null : item)}
-              style={{
-                background: selected?.id === item.id ? 'rgba(79,98,247,0.08)' : '#141828',
-                border: selected?.id === item.id ? '1px solid rgba(79,98,247,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 14, padding: '16px 20px',
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)' }}
-              onMouseLeave={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    {item.pinned && (
-                      <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '2px 7px', borderRadius: 5, fontWeight: 600 }}>📌 고정</span>
-                    )}
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.title}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 13, color: '#8b91ab', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.content}
-                  </p>
-                </div>
-                <div style={{ fontSize: 12, color: '#8b91ab', flexShrink: 0, textAlign: 'right' }}>
-                  <div>{item.author}</div>
-                  <div style={{ marginTop: 2 }}>{item.createdAt}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+      {saveMsg && (
+        <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#4ade80' }}>
+          {saveMsg}
         </div>
+      )}
 
-        {/* 상세 보기 */}
-        {selected && (
-          <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 28px', position: 'sticky', top: 20, height: 'fit-content' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {selected.pinned && (
-                  <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '2px 7px', borderRadius: 5, fontWeight: 600 }}>📌 고정</span>
-                )}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: '#8b91ab' }}>
+          <div style={{ width: 32, height: 32, border: '2px solid rgba(79,98,247,0.3)', borderTop: '2px solid #4f62f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          불러오는 중...
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.5fr' : '1fr', gap: 20 }}>
+
+          {/* 목록 */}
+          <div>
+            {sorted.length === 0 ? (
+              <div style={{ ...s.card, textAlign: 'center', padding: '48px 24px', color: '#8b91ab', fontSize: 14 }}>
+                등록된 공지사항이 없습니다.
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 18, fontFamily: 'inherit' }}>×</button>
-            </div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: '0 0 12px' }}>{selected.title}</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              {selected.authorImage
-                ? <img src={selected.authorImage} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
-                : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(79,98,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#818cf8' }}>👑</div>
-              }
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9' }}>{selected.author}</div>
-                <div style={{ fontSize: 12, color: '#8b91ab' }}>{selected.createdAt}</div>
+            ) : sorted.map(item => (
+              <div
+                key={item.id}
+                onClick={() => setSelected(selected?.id === item.id ? null : item)}
+                style={selected?.id === item.id ? s.activeCard : s.card}
+                onMouseEnter={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)' }}
+                onMouseLeave={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      {item.pinned === 'true' && (
+                        <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '2px 7px', borderRadius: 5, fontWeight: 600 }}>고정</span>
+                      )}
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.title}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 13, color: '#8b91ab', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.content}
+                    </p>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#8b91ab', flexShrink: 0, textAlign: 'right' }}>
+                    <div>{item.author}</div>
+                    <div style={{ marginTop: 2 }}>{item.createdAt}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <p style={{ fontSize: 14, color: '#c4c7d6', lineHeight: 1.8, whiteSpace: 'pre-wrap', margin: 0 }}>
-              {selected.content}
-            </p>
-            {isAdmin && (
-              <div style={{ marginTop: 20, display: 'flex', gap: 8 }}>
-                <button style={{ padding: '6px 14px', background: 'rgba(79,98,247,0.15)', color: '#818cf8', border: '1px solid rgba(79,98,247,0.25)', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  ✏️ 수정
-                </button>
-                <button style={{ padding: '6px 14px', background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 7, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  🗑 삭제
-                </button>
-              </div>
-            )}
+            ))}
           </div>
-        )}
-      </div>
 
-      {/* 공지 작성 모달 (이사 전용) */}
+          {/* 상세 보기 */}
+          {selected && (
+            <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 28px', position: 'sticky', top: 20, height: 'fit-content' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 18 }}>x</button>
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: '0 0 12px' }}>{selected.title}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(79,98,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#818cf8' }}>
+                  {selected.authorImage
+                    ? <img src={selected.authorImage} alt="" style={{ width: 28, height: 28, borderRadius: '50%' }} />
+                    : 'D'}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9' }}>{selected.author}</div>
+                  <div style={{ fontSize: 12, color: '#8b91ab' }}>{selected.createdAt}</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 14, color: '#c4c7d6', lineHeight: 1.8, whiteSpace: 'pre-wrap', margin: 0 }}>
+                {selected.content}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 공지 작성 모달 */}
       {showForm && isAdmin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: '32px', width: '100%', maxWidth: 540, animation: 'fadeIn 0.2s ease' }}>
+          <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: '32px', width: '100%', maxWidth: 560 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>📢 {t('announcements.new')}</h2>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20, fontFamily: 'inherit' }}>×</button>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>공지사항 작성</h2>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>x</button>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6, fontWeight: 500 }}>{t('announcements.form.title')}</label>
+              <label style={s.label}>제목 *</label>
               <input
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                placeholder={t('announcements.form.titlePlaceholder')}
-                style={{ width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '9px 14px', color: '#f1f3f9', fontSize: 14, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                placeholder="공지 제목을 입력하세요"
+                style={s.input}
               />
             </div>
 
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6, fontWeight: 500 }}>{t('announcements.form.content')}</label>
+            <div style={{ marginBottom: 16 }}>
+              <label style={s.label}>내용 *</label>
               <textarea
                 value={form.content}
                 onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
-                placeholder={t('announcements.form.contentPlaceholder')}
-                rows={6}
-                style={{ width: '100%', background: '#141828', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '9px 14px', color: '#f1f3f9', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.7, boxSizing: 'border-box' }}
+                placeholder="공지 내용을 입력하세요"
+                rows={7}
+                style={{ ...s.input, resize: 'vertical', lineHeight: 1.7 }}
               />
+            </div>
+
+            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                id="pinned"
+                checked={form.pinned}
+                onChange={e => setForm(p => ({ ...p, pinned: e.target.checked }))}
+                style={{ width: 16, height: 16, cursor: 'pointer' }}
+              />
+              <label htmlFor="pinned" style={{ fontSize: 13, color: '#c4c7d6', cursor: 'pointer' }}>상단 고정</label>
+            </div>
+
+            <div style={{ background: 'rgba(79,98,247,0.08)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 10, padding: '12px 14px', marginBottom: 20, fontSize: 12, color: '#818cf8' }}>
+              등록 즉시 전체 직원 이메일로 공지 PDF가 자동 발송됩니다.
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '9px 20px', background: 'rgba(255,255,255,0.05)', color: '#8b91ab', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {t('common.cancel')}
+                취소
               </button>
-              <button onClick={handleSubmit} disabled={saving || !form.title || !form.content} style={{ padding: '9px 20px', background: !form.title || !form.content ? 'rgba(79,98,247,0.4)' : '#4f62f7', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: !form.title || !form.content ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                {saving ? '저장 중...' : t('announcements.form.publish')}
+              <button
+                onClick={handleSubmit}
+                disabled={saving || !form.title || !form.content}
+                style={{ padding: '9px 24px', background: !form.title || !form.content ? 'rgba(79,98,247,0.4)' : '#4f62f7', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: !form.title || !form.content ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+              >
+                {saving ? '등록 중...' : '등록 및 발송'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
