@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 
@@ -49,12 +49,10 @@ export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading]   = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [uploadingReceipt, setUploadingReceipt] = useState(false)
   const [form, setForm]         = useState(EMPTY_FORM)
   const [filterStatus, setFilterStatus] = useState('all')
   const [rejectModal, setRejectModal]   = useState(null)
   const [rejectReason, setRejectReason] = useState('')
-  const fileInputRef = useRef(null)
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true)
@@ -66,32 +64,6 @@ export default function ExpensesPage() {
   }, [])
 
   useEffect(() => { fetchExpenses() }, [fetchExpenses])
-
-  // 영수증 업로드
-  const handleReceiptUpload = async (file) => {
-    if (!file) return
-    setUploadingReceipt(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/expenses/upload', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '업로드 실패')
-
-      if (data.driveDisabled) {
-        // Drive API 비활성화 → 파일명만 저장
-        setForm(f => ({ ...f, receipt_url: `[첨부: ${data.fileName}]` }))
-        toast('영수증 파일명이 저장됐습니다. (Drive 연동 시 링크로 업그레이드)', { icon: '📎' })
-      } else {
-        setForm(f => ({ ...f, receipt_url: data.viewUrl }))
-        toast.success('영수증 업로드 완료!')
-      }
-    } catch (err) {
-      toast.error(err.message)
-    } finally {
-      setUploadingReceipt(false)
-    }
-  }
 
   const handleSubmit = async () => {
     if (!form.title || !form.amount || !form.expense_date) {
@@ -254,30 +226,19 @@ export default function ExpensesPage() {
           <div style={{ marginBottom: 16 }}>
             <label style={s.lbl}>지출일</label>
             <input type="date" style={s.inp} value={form.expense_date}
+              max={new Date().toISOString().slice(0, 10)}
               onChange={e => setForm({ ...form, expense_date: e.target.value })} />
           </div>
 
-          {/* 영수증 업로드 */}
+          {/* 영수증 링크 */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>영수증 첨부 <span style={{ color: '#8b91ab' }}>(JPG · PNG · PDF, 5MB 이하)</span></label>
-            <input ref={fileInputRef} type="file" accept="image/*,application/pdf"
-              style={{ display: 'none' }}
-              onChange={e => handleReceiptUpload(e.target.files[0])} />
-            {form.receipt_url ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8 }}>
-                <span style={{ fontSize: 16 }}>📎</span>
-                <a href={form.receipt_url} target="_blank" rel="noreferrer"
-                  style={{ fontSize: 13, color: '#4ade80', flex: 1 }}>영수증 업로드 완료 — 클릭하여 확인</a>
-                <button onClick={() => { setForm(f => ({ ...f, receipt_url: '' })); fileInputRef.current.value = '' }}
-                  style={{ ...s.btnSm('rgba(239,68,68,0.1)', '#f87171', 'rgba(239,68,68,0.2)') }}>제거</button>
-              </div>
-            ) : (
-              <button onClick={() => fileInputRef.current.click()}
-                disabled={uploadingReceipt}
-                style={{ ...s.inp, textAlign: 'left', cursor: 'pointer', color: '#8b91ab', background: uploadingReceipt ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.05)' }}>
-                {uploadingReceipt ? '⏳ 업로드 중...' : '📎 파일 선택하기'}
-              </button>
-            )}
+            <label style={s.lbl}>영수증 링크 <span style={{ color: '#8b91ab' }}>(선택 — Google Drive 공유 링크 붙여넣기)</span></label>
+            <input style={s.inp} placeholder="https://drive.google.com/file/d/..."
+              value={form.receipt_url}
+              onChange={e => setForm({ ...form, receipt_url: e.target.value })} />
+            <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 6 }}>
+              💡 Drive에 영수증 사진 업로드 → 우클릭 → 링크 복사 → 여기 붙여넣기
+            </div>
           </div>
 
           {/* 설명 */}
@@ -409,10 +370,16 @@ function ExpenseCard({ exp, isAdmin, getCat, onApprove, onReject }) {
             )}
             {/* 영수증 링크 */}
             {exp.receipt_url && (
-              <a href={exp.receipt_url} target="_blank" rel="noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#818cf8', marginTop: 5, textDecoration: 'none' }}>
-                📎 영수증 보기
-              </a>
+              exp.receipt_url.startsWith('http') ? (
+                <a href={exp.receipt_url} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#818cf8', marginTop: 5, textDecoration: 'none' }}>
+                  📎 영수증 보기
+                </a>
+              ) : (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#8b91ab', marginTop: 5 }}>
+                  📎 {exp.receipt_url}
+                </span>
+              )
             )}
             {exp.status === 'rejected' && exp.rejected_reason && (
               <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>반려 사유: {exp.rejected_reason}</div>

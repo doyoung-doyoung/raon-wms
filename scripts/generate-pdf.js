@@ -31,6 +31,9 @@ async function run() {
     } else if (type === 'announcement') {
       const mod = await import('../lib/pdf/announcement.jsx')
       Component = mod.default
+    } else if (type === 'warning-letter') {
+      const mod = await import('../lib/pdf/warningLetter.jsx')
+      Component = mod.default
     }
 
     const element = createElement(Component, { data })
