@@ -111,6 +111,41 @@
     "withholdingTax": "ทวิ 50 원천징수 확인서",
     "announcement": "공지사항"
   },
+  "expenses": {
+    "title": "경비 청구",
+    "subtitle": "업무 경비를 신청하고 정산 현황을 확인하세요",
+    "apply": "경비 신청",
+    "history": "신청 내역",
+    "total": "전체 신청",
+    "pending": "검토중",
+    "approved": "승인됨",
+    "totalApproved": "승인 총액 (THB)",
+    "form": {
+      "category": "지출 분류",
+      "title": "항목명",
+      "titlePlaceholder": "예: 클라이언트 미팅 식사",
+      "amount": "금액",
+      "date": "지출일",
+      "description": "상세 설명 (선택)",
+      "descriptionPlaceholder": "지출 목적이나 상세 내역을 입력해주세요",
+      "submit": "신청하기",
+      "submitting": "신청 중..."
+    },
+    "category": {
+      "transport":     "교통비",
+      "meal":          "식비",
+      "accommodation": "숙박비",
+      "supplies":      "소모품",
+      "entertainment": "접대비",
+      "other":         "기타"
+    },
+    "rejectModal": {
+      "title": "반려 사유 입력",
+      "placeholder": "반려 사유를 입력해주세요"
+    },
+    "note": "영수증은 별도로 보관 후 관리자 요청 시 제출해주세요.",
+    "empty": "경비 신청 내역이 없습니다"
+  },
   "login": {
     "subtitle": "Work Management System",
     "googleLogin": "Google 계정으로 로그인",

@@ -156,11 +156,12 @@ export default function PayslipPDF({ data }) {
     startDateTh,
     baseSalary = 0, housing = 0, transport = 0,
     meal = 0, ot = 0, otherIncome = 0,
+    expenseReimbursement = 0,
     tax = 0, socialSecurity = 0, otherDeduction = 0,
     directorName, directorRole,
   } = data
 
-  const totalIncome = baseSalary + housing + transport + meal + ot + otherIncome
+  const totalIncome = baseSalary + housing + transport + meal + ot + otherIncome + expenseReimbursement
   const totalDeduction = tax + socialSecurity + otherDeduction
   const netPay = totalIncome - totalDeduction
   const sigPath = path.join(process.cwd(), 'public', 'signature.jpg')
@@ -205,6 +206,7 @@ export default function PayslipPDF({ data }) {
             <View style={styles.payRow}><Text style={styles.payLabel}>ค่าอาหาร / Meal</Text><Text style={styles.payVal}>{meal.toLocaleString()}</Text></View>
             <View style={styles.payRow}><Text style={styles.payLabel}>ค่าล่วงเวลา / OT</Text><Text style={styles.payVal}>{ot.toLocaleString()}</Text></View>
             {otherIncome > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>อื่นๆ / Other</Text><Text style={styles.payVal}>{otherIncome.toLocaleString()}</Text></View>}
+            {expenseReimbursement > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>ค่าใช้จ่าย / Expense</Text><Text style={styles.payVal}>{expenseReimbursement.toLocaleString()}</Text></View>}
             <View style={styles.paySubtotal}>
               <Text>รวม / Total</Text>
               <Text style={styles.incomeTotal}>{totalIncome.toLocaleString()}</Text>
