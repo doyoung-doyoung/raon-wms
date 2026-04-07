@@ -15,13 +15,14 @@ export default function MyDocumentsPage() {
 
   useEffect(() => {
     if (!session?.user?.email) return
-    fetch('/api/employees')
+    fetch('/api/employees/me')
       .then(r => r.json())
-      .then(data => {
-        const emp = (data.employees || []).find(e => e.email === session.user.email)
-        if (emp) loadDocuments(emp.id)
+      .then(emp => {
+        if (emp?.employee_id || emp?.id) loadDocuments(emp.employee_id || emp.id)
+        else if (emp?.email) loadDocuments(emp.email)
         else setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [session])
 
   async function loadDocuments(employeeId) {

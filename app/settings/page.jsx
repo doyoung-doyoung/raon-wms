@@ -65,6 +65,7 @@ export default function SettingsPage() {
   const [holidays, setHolidays] = useState(DEFAULT_HOLIDAYS)
   const [newHoliday, setNewHoliday] = useState({ date: '', name: '' })
   const [saved, setSaved] = useState(false)
+  const [officeLocation, setOfficeLocation] = useState({ lat: '13.8199', lng: '100.5601', radius: 20, enabled: false })
 
   // 퇴사 처리
   const [employees, setEmployees] = useState([])
@@ -91,6 +92,19 @@ export default function SettingsPage() {
     if (activeTab === 'resignation') fetchEmployees()
   }, [activeTab])
 
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(data => {
+      if (data.menuItems) {
+        const newSettings = { ...DEFAULT_MENU_SETTINGS }
+        Object.keys(data.menuItems).forEach(k => {
+          if (newSettings[k]) newSettings[k] = { ...newSettings[k], visible: data.menuItems[k].visible }
+        })
+        setMenuSettings(newSettings)
+      }
+      if (data.officeLocation) setOfficeLocation(data.officeLocation)
+    }).catch(() => {})
+  }, [])
+
   const fetchEmployees = async () => {
     setLoadingEmp(true)
     try {
@@ -101,13 +115,40 @@ export default function SettingsPage() {
     setLoadingEmp(false)
   }
 
-  const handleSave = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('raon_menu_settings', JSON.stringify(menuSettings))
-      localStorage.setItem('raon_holidays', JSON.stringify(holidays))
-    }
+  const handleSave = async () => {
+    const menuItems = {}
+    Object.keys(menuSettings).forEach(k => {
+      menuItems[k] = { visible: menuSettings[k].visible }
+    })
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ menuItems, officeLocation }),
+    })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const detectCurrentLocation = () => {
+    if (!navigator.geolocation) return alert('GPS를 지원하지 않습니다.')
+    navigator.geolocation.getCurrentPosition(pos => {
+      setOfficeLocation(prev => ({ ...prev, lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }))
+    }, () => alert('위치를 가져올 수 없습니다.'))
+  }
+
+  const parseGoogleMapsUrl = (url) => {
+    // Patterns: @lat,lng,zoom or ?q=lat,lng or /place/.../@lat,lng
+    const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (atMatch) {
+      setOfficeLocation(prev => ({ ...prev, lat: atMatch[1], lng: atMatch[2] }))
+      return
+    }
+    const qMatch = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+    if (qMatch) {
+      setOfficeLocation(prev => ({ ...prev, lat: qMatch[1], lng: qMatch[2] }))
+      return
+    }
+    alert('좌표를 찾을 수 없습니다. 링크를 확인해주세요.')
   }
 
   const toggleMenu = (key, field) => {
@@ -217,31 +258,85 @@ export default function SettingsPage() {
           <div style={{ background: 'rgba(79,98,247,0.06)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#818cf8' }}>
             💡 직원에게 보이는 메뉴를 숨기거나 비활성화할 수 있습니다. 관리자에게는 항상 표시됩니다.
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
             {Object.entries(menuSettings).map(([key, setting]) => (
               <div key={key} style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: 16 }}>{setting.label.split(' ')[0]}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f3f9' }}>{setting.label.split(' ').slice(1).join(' ')}</div>
-                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>직원 메뉴</div>
+                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>직원 메뉴에 표시</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  {[{ field: 'visible', label: '표시', on: '#4f62f7' }, { field: 'enabled', label: '활성화', on: '#22c55e' }].map(({ field, label, on }) => (
-                    <div key={field} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 11, color: '#8b91ab' }}>{label}</span>
-                      <div onClick={() => toggleMenu(key, field)} style={{ width: 36, height: 20, borderRadius: 10, cursor: 'pointer', background: setting[field] ? on : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'all 0.2s' }}>
-                        <div style={{ position: 'absolute', top: 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'all 0.2s', left: setting[field] ? 18 : 2 }} />
-                      </div>
-                    </div>
-                  ))}
-                  <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, fontWeight: 600, background: !setting.visible ? 'rgba(139,145,171,0.1)' : !setting.enabled ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', color: !setting.visible ? '#8b91ab' : !setting.enabled ? '#f87171' : '#4ade80' }}>
-                    {!setting.visible ? '숨김' : !setting.enabled ? '비활성' : '정상'}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: '#8b91ab' }}>표시</span>
+                  <div onClick={() => toggleMenu(key, 'visible')} style={{ width: 40, height: 22, borderRadius: 11, cursor: 'pointer', background: setting.visible ? '#4f62f7' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'all 0.2s' }}>
+                    <div style={{ position: 'absolute', top: 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'all 0.2s', left: setting.visible ? 21 : 3 }} />
+                  </div>
+                  <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, fontWeight: 600, background: setting.visible ? 'rgba(34,197,94,0.1)' : 'rgba(139,145,171,0.1)', color: setting.visible ? '#4ade80' : '#8b91ab' }}>
+                    {setting.visible ? '표시 중' : '숨김'}
                   </span>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* GPS 사무실 위치 설정 */}
+          <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', margin: 0 }}>📍 사무실 위치 인증 (출퇴근)</h3>
+                <p style={{ fontSize: 12, color: '#8b91ab', marginTop: 4 }}>활성화하면 지정 반경 안에서만 출퇴근 가능</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: '#8b91ab' }}>{officeLocation.enabled ? '활성' : '비활성'}</span>
+                <div onClick={() => setOfficeLocation(p => ({ ...p, enabled: !p.enabled }))} style={{ width: 40, height: 22, borderRadius: 11, cursor: 'pointer', background: officeLocation.enabled ? '#22c55e' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'all 0.2s' }}>
+                  <div style={{ position: 'absolute', top: 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'all 0.2s', left: officeLocation.enabled ? 21 : 3 }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Google Maps 링크 붙여넣기 */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>Google Maps 링크 붙여넣기</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  placeholder="https://maps.google.com/... 또는 좌표 링크"
+                  style={{ ...inputStyle, flex: 1 }}
+                  onPaste={e => {
+                    e.preventDefault()
+                    const text = e.clipboardData.getData('text')
+                    parseGoogleMapsUrl(text)
+                  }}
+                  onChange={() => {}}
+                  value=""
+                />
+                <button onClick={detectCurrentLocation} style={{ padding: '8px 14px', background: 'rgba(79,98,247,0.15)', border: '1px solid rgba(79,98,247,0.3)', borderRadius: 8, color: '#818cf8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  📍 현재 위치
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>Google Maps에서 위치 공유 → 링크 복사 후 위 입력란에 붙여넣기</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>위도 (Latitude)</div>
+                <input value={officeLocation.lat} onChange={e => setOfficeLocation(p => ({ ...p, lat: e.target.value }))} style={inputStyle} placeholder="13.8199" />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>경도 (Longitude)</div>
+                <input value={officeLocation.lng} onChange={e => setOfficeLocation(p => ({ ...p, lng: e.target.value }))} style={inputStyle} placeholder="100.5601" />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 4 }}>허용 반경 (미터) — 현재: {officeLocation.radius}m</div>
+              <input type="range" min="10" max="200" step="5" value={officeLocation.radius}
+                onChange={e => setOfficeLocation(p => ({ ...p, radius: Number(e.target.value) }))}
+                style={{ width: '100%', accentColor: '#4f62f7' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#8b91ab', marginTop: 2 }}>
+                <span>10m (정밀)</span><span style={{ color: '#4f62f7', fontWeight: 600 }}>{officeLocation.radius}m</span><span>200m (넓게)</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
