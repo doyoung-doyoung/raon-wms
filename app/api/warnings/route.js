@@ -216,7 +216,7 @@ export async function POST(request) {
 
     // 수동 발행 모드
     const {
-      employeeId, employeeName, employeeEmail, position,
+      employeeId, employeeName, employeeNameEn, employeeEmail, position,
       startDate, address, reason1, reason2, reason3,
     } = body
 
@@ -263,7 +263,7 @@ export async function POST(request) {
         issueDate: issueDateTh,
         issueDateEn,
         employeeName: employeeName,
-        employeeNameEn: '',
+        employeeNameEn: employeeNameEn || '',
         position: position || '',
         startDate: startDate || today,
         address: address || '',

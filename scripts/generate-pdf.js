@@ -15,6 +15,12 @@ Font.register({
   ]
 })
 
+// 태국어 단어 중간 줄바꿈 방지 + 마지막 글자 사라짐 방지
+Font.registerHyphenationCallback(word => {
+  // 단어를 통째로 반환 → 중간에서 끊지 않음
+  return [word]
+})
+
 const inputData = JSON.parse(process.argv[2])
 const { type, data } = inputData
 
@@ -39,7 +45,17 @@ async function run() {
     const element = createElement(Component, { data })
     const buffer = await renderToBuffer(element)
 
-    process.stdout.write(buffer.toString('base64'))
+    // PDF 페이지 수 감지 (PDF /Count N 파싱)
+    const pdfStr = buffer.toString('latin1')
+    const countMatches = pdfStr.match(/\/Count\s+(\d+)/g) || []
+    let pageCount = 1
+    for (const m of countMatches) {
+      const n = parseInt(m.replace(/\/Count\s+/, ''))
+      if (n > pageCount) pageCount = n
+    }
+
+    const result = { pdf: buffer.toString('base64'), pages: pageCount }
+    process.stdout.write(JSON.stringify(result))
     process.exit(0)
   } catch (err) {
     process.stderr.write(err.message)

@@ -15,7 +15,7 @@ export default function WarningsPage() {
   const [saving, setSaving] = useState(false)
   const [autoChecking, setAutoChecking] = useState(false)
   const [form, setForm] = useState({
-    employeeId: '', employeeName: '', employeeEmail: '',
+    employeeId: '', employeeName: '', employeeNameEn: '', employeeEmail: '',
     position: '', startDate: '', address: '',
     reason1: '', reason2: '', reason3: '',
   })
@@ -53,6 +53,7 @@ export default function WarningsPage() {
         body: JSON.stringify({
           employeeId:    form.employeeEmail,
           employeeName:  form.employeeName,
+          employeeNameEn: form.employeeNameEn || '',
           employeeEmail: form.employeeEmail,
           position:      form.position,
           startDate:     form.startDate,
@@ -66,7 +67,7 @@ export default function WarningsPage() {
       if (data.success) {
         await fetchWarnings()
         setShowForm(false)
-        setForm({ employeeId: '', employeeName: '', employeeEmail: '', position: '', startDate: '', address: '', reason1: '', reason2: '', reason3: '' })
+        setForm({ employeeId: '', employeeName: '', employeeNameEn: '', employeeEmail: '', position: '', startDate: '', address: '', reason1: '', reason2: '', reason3: '' })
       } else {
         alert(data.error || '발행 실패')
       }
@@ -288,7 +289,8 @@ export default function WarningsPage() {
                     setForm(p => ({
                       ...p,
                       employeeEmail: emp.email,
-                      employeeName: emp.name_ko || emp.name_th || emp.name_en || '',
+                      employeeName: emp.name_th || emp.name_ko || emp.name_en || '',
+                      employeeNameEn: emp.name_en || '',
                       position: emp.position || '',
                       startDate: emp.start_date || '',
                       address: emp.currentAddress || emp.address || '',

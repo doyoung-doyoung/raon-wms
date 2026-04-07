@@ -107,25 +107,22 @@ export default function SalaryCertificatePDF({ data }) {
         <Watermark />
         <DocHeader />
 
-        <Text style={styles.date}>
-          {`วันที่ ${issueDate}\nDate: ${issueDateEn}`}
-        </Text>
+        <Text style={styles.date}>{'วันที่ ' + issueDate + ' '}</Text>
+        <Text style={[styles.date, { marginBottom: 14 }]}>{'Date: ' + issueDateEn + ' '}</Text>
 
-        <Text style={styles.titleTh}>{"หนังสือรับรองเงินเดือน และรับรองการทำงาน"}</Text>
+        <Text style={styles.titleTh}>{'หนังสือรับรองเงินเดือน และรับรองการทำงาน\u00A0'}</Text>
         <Text style={styles.titleEn}>Salary & Employment Certificate</Text>
 
         <View style={styles.bodyTh}>
-          <Text>บริษัทราอน(ไทยแลนด์)จำกัด ขอรับรองว่า <Text style={styles.highlight}>{nameTh} ({nameEn})</Text></Text>
-          <Text>เลขประจำตัว <Text style={styles.highlight}>{employeeId}</Text></Text>
-          <Text>ที่อยู่ตามบัตรประชาชน: <Text style={styles.highlight}>{idCardAddress}</Text></Text>
-          <Text>ที่อยู่ปัจจุบัน (ติดต่อได้): <Text style={styles.highlight}>{currentAddress}</Text></Text>
+          <Text>{'บริษัท ราอน (ไทยแลนด์) จำกัด ขอรับรองว่า '}<Text style={styles.highlight}>{nameTh + ' (' + nameEn + ') '}</Text></Text>
+          <Text>{'เลขประจำตัว '}<Text style={styles.highlight}>{employeeId + ' '}</Text></Text>
+          <Text>{'ที่อยู่ตามบัตรประชาชน: '}<Text style={styles.highlight}>{(idCardAddress || '') + ' '}</Text></Text>
+          <Text>{'ที่อยู่ปัจจุบัน (ติดต่อได้): '}<Text style={styles.highlight}>{(currentAddress || '') + ' '}</Text></Text>
           <Text>{' '}</Text>
-          <Text>
-            ได้เข้ามาปฏิบัติงานกับบริษัทตั้งแต่วันที่ <Text style={styles.highlight}>{startDateTh}</Text> จนถึงปัจจุบัน
-            {' '}ในตำแหน่ง <Text style={styles.highlight}>{position}</Text>
-            {' '}ได้รับค่าจ้างเดือนละ <Text style={styles.highlight}>{Number(salary).toLocaleString()}</Text> บาท ({numToThaiWords(Number(salary))})
-          </Text>
-          <Text>ซึ่งอัตรานี้ไม่รวมค่าตอบแทนและเงินพิเศษอื่นๆ</Text>
+          <Text>{'ได้เข้ามาปฏิบัติงานกับบริษัทตั้งแต่วันที่\u00A0'}<Text style={styles.highlight}>{startDateTh + '\u00A0'}</Text>{'จนถึงปัจจุบัน\u00A0'}</Text>
+          <Text>{'ในตำแหน่ง\u00A0'}<Text style={styles.highlight}>{(position || '') + '\u00A0'}</Text></Text>
+          <Text>{'ได้รับค่าจ้างเดือนละ\u00A0'}<Text style={styles.highlight}>{Number(salary).toLocaleString() + '\u00A0'}</Text>{'บาท (' + numToThaiWords(Number(salary)) + ')\u00A0'}</Text>
+          <Text>{'ซึ่งอัตรานี้ไม่รวมค่าตอบแทนและเงินพิเศษอื่นๆ\u00A0'}</Text>
         </View>
 
         <View style={styles.bodyEn}>
@@ -135,7 +132,7 @@ export default function SalaryCertificatePDF({ data }) {
         </View>
 
         <View style={styles.footerNote}>
-          <Text>หนังสือฉบับนี้ออกให้เพื่อใช้เป็นหลักฐานประกอบการใดๆ ตามที่พนักงานขอ และไม่มีภาระผูกพันใดๆต่อบริษัท</Text>
+          <Text>{'หนังสือฉบับนี้ออกให้เพื่อใช้เป็นหลักฐานประกอบการใดๆ ตามที่พนักงานขอ และไม่มีภาระผูกพันใดๆต่อบริษัท\u00A0'}</Text>
         </View>
 
         <View style={styles.sigArea}>
