@@ -1,6 +1,7 @@
 import { auth } from '../auth/[...nextauth]/route'
 import { readSheet, appendRow, updateRow, generateId } from '../../../lib/google/sheets'
 import { sendLeaveStatusEmail } from '../../../lib/email'
+import { generateLeaveApproval } from '../../../lib/pdf/generate.js'
 
 const SHEET_ID = process.env.SHEETS_LEAVES_ID
 
@@ -89,11 +90,49 @@ export async function PATCH(request) {
       approved_at: today,
     })
 
-    // 이메일 발송 (백그라운드로 처리)
+    // 이메일 + PDF 발송
     try {
       const leaves = await readSheet(SHEET_ID)
       const leave = leaves.find(l => l.id === id)
       if (leave) {
+        let pdfBuffer = null
+        let pdfFileName = null
+
+        // 승인 시에만 PDF 생성
+        if (status === 'approved') {
+          try {
+            const now = new Date()
+            const thaiYear = now.getFullYear() + 543
+            const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
+            const issueDate = `${now.getDate()} ${thaiMonths[now.getMonth()]} พ.ศ. ${thaiYear}`
+
+            // 직원 정보 조회
+            const employees = await readSheet(process.env.SHEETS_EMPLOYEES_ID)
+            const emp = employees.find(e => e.email === leave.employee_email) || {}
+
+            pdfBuffer = await generateLeaveApproval({
+              issueDate,
+              employeeName: emp.name_th || leave.employee_name || '',
+              employeeNameEn: emp.name_en || '',
+              employeeId: emp.employee_id || leave.employee_id || '',
+              position: emp.position || '',
+              leaveType: leave.leave_type,
+              startDate: leave.start_date,
+              endDate: leave.end_date,
+              days: leave.days,
+              reason: leave.reason || '',
+              isPaid: leave.is_paid !== 'false',
+              approvedBy: session.user.name,
+              approvedAt: today,
+              directorName: process.env.ADMIN_NAME || 'Doyoung Jung',
+              directorRole: 'กรรมการบริษัท (Managing Director)',
+            })
+            pdfFileName = `leave_approval_${leave.employee_name}_${leave.start_date}.pdf`
+          } catch (pdfErr) {
+            console.error('휴가 PDF 생성 실패:', pdfErr)
+          }
+        }
+
         await sendLeaveStatusEmail({
           to:             leave.employee_email,
           name:           leave.employee_name,
@@ -103,11 +142,12 @@ export async function PATCH(request) {
           days:           leave.days,
           status,
           rejectedReason: rejected_reason || '',
+          pdfBuffer,
+          pdfFileName,
         })
       }
     } catch (emailError) {
       console.error('이메일 발송 실패:', emailError)
-      // 이메일 실패해도 승인은 성공으로 처리
     }
 
     return Response.json({ success: true })
