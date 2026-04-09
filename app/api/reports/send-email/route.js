@@ -1,5 +1,6 @@
-import { getServerSession } from 'next-auth'
-import { google } from 'googleapis'
+import { auth } from '../../auth/[...nextauth]/route'
+import { readSheet } from '../../../../lib/google/sheets'
+import nodemailer from 'nodemailer'
 
 /**
  * POST /api/reports/send-email
@@ -7,14 +8,11 @@ import { google } from 'googleapis'
  * - 수동 호출 or 자동 월간 스케줄러에서 호출
  */
 export async function POST(request) {
-  const session = await getServerSession()
-
-  // 이사 또는 시스템 내부 호출만 허용
+  const session = await auth()
   const body = await request.json().catch(() => ({}))
   const isSystemCall = body.systemKey === process.env.REPORT_SYSTEM_KEY
-  const isAdmin = session?.isAdmin
 
-  if (!isAdmin && !isSystemCall) {
+  if (!session?.isAdmin && !isSystemCall) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -37,18 +35,41 @@ export async function POST(request) {
   }
 }
 
+function inPeriod(dateStr, year, month) {
+  if (!dateStr) return false
+  if (month) return dateStr.startsWith(`${year}-${String(month).padStart(2, '0')}`)
+  return dateStr.startsWith(String(year))
+}
+
 async function aggregateReportData(year, month) {
-  // TODO: 실제 Google Sheets 데이터 집계
-  // const employees = await readSheet(process.env.SHEETS_EMPLOYEES_ID)
-  // const leaves = await readSheet(process.env.SHEETS_LEAVES_ID)
-  // ...
+  const [employees, leaves, warnings, expenses] = await Promise.all([
+    readSheet(process.env.SHEETS_EMPLOYEES_ID).catch(() => []),
+    readSheet(process.env.SHEETS_LEAVES_ID).catch(() => []),
+    readSheet(process.env.SHEETS_WARNINGS_ID).catch(() => []),
+    readSheet(process.env.SHEETS_EXPENSES_ID).catch(() => []),
+  ])
+
+  const periodLeaves   = leaves.filter(l => l.status === 'approved' && inPeriod(l.start_date, year, month))
+  const periodWarnings = warnings.filter(w => inPeriod(w.issued_at, year, month))
+  const periodExpenses = expenses.filter(e => inPeriod(e.expense_date || e.submitted_at, year, month))
 
   return {
-    period: month ? `${year}년 ${month}월` : `${year}년 연간`,
-    employees: { total: 0, active: 0, newHires: 0 },
-    leaves: { annual: 0, sick: 0, personal: 0 },
-    warnings: 0,
-    documents: 0,
+    period:    month ? `${year}년 ${month}월` : `${year}년 연간`,
+    employees: {
+      total:    employees.length,
+      active:   employees.filter(e => e.status === 'active').length,
+      newHires: employees.filter(e => inPeriod(e.start_date, year, month)).length,
+    },
+    leaves: {
+      annual:   periodLeaves.filter(l => l.leave_type === 'annual').reduce((s, l) => s + parseFloat(l.days || 0), 0),
+      sick:     periodLeaves.filter(l => l.leave_type === 'sick').reduce((s, l) => s + parseFloat(l.days || 0), 0),
+      personal: periodLeaves.filter(l => l.leave_type === 'personal').reduce((s, l) => s + parseFloat(l.days || 0), 0),
+    },
+    warnings: periodWarnings.length,
+    expenses: {
+      total:    Math.round(periodExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0)),
+      approved: Math.round(periodExpenses.filter(e => e.status === 'approved').reduce((s, e) => s + parseFloat(e.amount || 0), 0)),
+    },
     invoices: { count: 0, totalTHB: 0, totalUSD: 0 },
   }
 }
@@ -106,11 +127,10 @@ function buildReportEmailHtml(data) {
         <p>이번 기간 <span class="warning-badge">${data.warnings}건</span>의 경고장이 발행되었습니다. 시스템에서 확인해주세요.</p>
       </div>` : ''}
       <div class="section">
-        <h2>💼 회계 현황</h2>
+        <h2>💳 경비 처리</h2>
         <div class="grid">
-          <div class="stat"><div class="stat-value">${data.invoices.count}건</div><div class="stat-label">인보이스 발행</div></div>
-          <div class="stat"><div class="stat-value">฿${data.invoices.totalTHB.toLocaleString()}</div><div class="stat-label">매출 (THB)</div></div>
-          <div class="stat"><div class="stat-value">$${data.invoices.totalUSD.toLocaleString()}</div><div class="stat-label">매출 (USD)</div></div>
+          <div class="stat"><div class="stat-value">฿${(data.expenses?.total || 0).toLocaleString()}</div><div class="stat-label">총 경비 청구</div></div>
+          <div class="stat"><div class="stat-value">฿${(data.expenses?.approved || 0).toLocaleString()}</div><div class="stat-label">승인 완료</div></div>
         </div>
       </div>
       <a href="${process.env.NEXTAUTH_URL}/reports" class="btn">📊 전체 리포트 보기</a>
@@ -125,27 +145,18 @@ function buildReportEmailHtml(data) {
 }
 
 async function sendReportEmail(html, period) {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH,
-    scopes: ['https://www.googleapis.com/auth/gmail.send'],
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
   })
 
-  const gmail = google.gmail({ version: 'v1', auth })
-  const adminEmail = process.env.ADMIN_EMAIL
-
-  const message = [
-    'Content-Type: text/html; charset=utf-8',
-    'MIME-Version: 1.0',
-    `To: ${adminEmail}`,
-    `Subject: [RAON WMS] ${period} 업무 리포트`,
-    '',
+  await transporter.sendMail({
+    from: `"RAON WMS" <${process.env.GMAIL_USER}>`,
+    to:      process.env.ADMIN_EMAIL,
+    subject: `[RAON WMS] ${period} 업무 리포트`,
     html,
-  ].join('\n')
-
-  const encoded = Buffer.from(message).toString('base64url')
-
-  await gmail.users.messages.send({
-    userId: 'me',
-    requestBody: { raw: encoded },
   })
 }

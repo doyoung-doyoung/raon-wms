@@ -48,11 +48,12 @@ const DEFAULT_HOLIDAYS = {
 }
 
 const DEFAULT_MENU_SETTINGS = {
-  announcements: { label: '📢 공지사항', visible: true, enabled: true },
-  attendance:    { label: '⏰ 출퇴근', visible: true, enabled: true },
-  leaves:        { label: '🗓️ 휴가/병가', visible: true, enabled: true },
-  expenses:      { label: '💰 경비 청구', visible: true, enabled: true },
-  warnings:      { label: '⚠️ 경고장', visible: true, enabled: true },
+  announcements: { label: '📢 공지사항', visible: true },
+  attendance:    { label: '⏰ 출퇴근', visible: true },
+  leaves:        { label: '🗓️ 휴가/병가', visible: true },
+  expenses:      { label: '💰 경비 청구', visible: true },
+  documents:     { label: '📄 내 서류함', visible: true },
+  warnings:      { label: '⚠️ 경고장', visible: false },
 }
 
 export default function SettingsPage() {
@@ -66,6 +67,7 @@ export default function SettingsPage() {
   const [newHoliday, setNewHoliday] = useState({ date: '', name: '' })
   const [saved, setSaved] = useState(false)
   const [officeLocation, setOfficeLocation] = useState({ lat: '13.8199', lng: '100.5601', radius: 20, enabled: false })
+  const [checkInTime, setCheckInTime] = useState('09:00')
 
   // 퇴사 처리
   const [employees, setEmployees] = useState([])
@@ -102,6 +104,7 @@ export default function SettingsPage() {
         setMenuSettings(newSettings)
       }
       if (data.officeLocation) setOfficeLocation(data.officeLocation)
+      if (data.checkInTime) setCheckInTime(data.checkInTime)
     }).catch(() => {})
   }, [])
 
@@ -123,7 +126,7 @@ export default function SettingsPage() {
     await fetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ menuItems, officeLocation }),
+      body: JSON.stringify({ menuItems, officeLocation, checkInTime }),
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -279,6 +282,24 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* 출근 시간 설정 */}
+          <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', margin: '0 0 4px' }}>⏰ 출근 시간 기준</h3>
+            <p style={{ fontSize: 12, color: '#8b91ab', marginTop: 0, marginBottom: 16 }}>이 시간 이후 출근 시 리포트에 지각으로 집계됩니다</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <input
+                type="time"
+                value={checkInTime}
+                onChange={e => setCheckInTime(e.target.value)}
+                style={{ ...inputStyle, width: 140, fontSize: 18, fontWeight: 700, textAlign: 'center', padding: '10px 14px' }}
+              />
+              <div>
+                <div style={{ fontSize: 13, color: '#f1f3f9', fontWeight: 500 }}>{checkInTime} 이후 = 지각</div>
+                <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>기본값: 09:00</div>
+              </div>
+            </div>
           </div>
 
           {/* GPS 사무실 위치 설정 */}

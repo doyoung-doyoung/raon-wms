@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
     radius: 20,
     enabled: false,
   },
+  checkInTime: '09:00',
 }
 
 export async function GET() {

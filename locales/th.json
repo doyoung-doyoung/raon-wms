@@ -46,7 +46,10 @@
       "settings": "ตั้งค่า"
     },
     "warnings": "หนังสือตักเตือน",
-    "reports": "รายงาน"
+    "reports": "รายงาน",
+    "myDocuments": "เอกสารของฉัน",
+    "documentRequest": "ขอเอกสาร",
+    "documentApprove": "อนุมัติเอกสาร"
   },
   "dashboard": {
     "greeting": "สวัสดี, {{name}} 👋",

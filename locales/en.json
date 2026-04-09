@@ -46,7 +46,10 @@
       "settings": "Settings"
     },
     "warnings": "Warnings",
-    "reports": "Reports"
+    "reports": "Reports",
+    "myDocuments": "My Documents",
+    "documentRequest": "Request Document",
+    "documentApprove": "Approve Documents"
   },
   "dashboard": {
     "greeting": "Hello, {{name}} 👋",

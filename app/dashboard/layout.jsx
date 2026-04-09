@@ -7,16 +7,40 @@ import Link from 'next/link'
 import { useLang } from '../../lib/i18n/useLang'
 import LangSwitcher from '../../components/ui/LangSwitcher'
 
+// settings key → nav href 매핑
+const NAV_VISIBILITY_MAP = {
+  announcements: '/announcements',
+  attendance:    '/attendance',
+  leaves:        '/leaves',
+  expenses:      '/expenses',
+  documents:     '/documents/my-documents',
+  warnings:      '/warnings',
+}
+
 export default function DashboardLayout({ children }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
   const { t } = useLang()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [hiddenNavHrefs, setHiddenNavHrefs] = useState(new Set())
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
   }, [status, router])
+
+  useEffect(() => {
+    if (status !== 'authenticated' || session?.isAdmin) return
+    fetch('/api/settings').then(r => r.json()).then(data => {
+      if (!data.menuItems) return
+      const hidden = new Set()
+      Object.entries(NAV_VISIBILITY_MAP).forEach(([key, href]) => {
+        const s = data.menuItems[key]
+        if (s && s.visible === false) hidden.add(href)
+      })
+      setHiddenNavHrefs(hidden)
+    }).catch(() => {})
+  }, [status, session])
 
   if (status === 'loading' || !session) {
     return (
@@ -74,7 +98,11 @@ export default function DashboardLayout({ children }) {
 
   const visibleNav = navGroups.map(g => ({
     ...g,
-    items: g.items.filter(item => !item.adminOnly || isAdmin)
+    items: g.items.filter(item => {
+      if (item.adminOnly && !isAdmin) return false
+      if (!isAdmin && hiddenNavHrefs.has(item.href)) return false
+      return true
+    })
   })).filter(g => g.items.length > 0)
 
   return (

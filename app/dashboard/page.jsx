@@ -3,13 +3,6 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
-const DEFAULT_MENU = [
-  { key: 'announcements', labelTh: 'ประกาศ', labelKo: '공지사항', icon: '📢', href: '/announcements' },
-  { key: 'attendance',    labelTh: 'เวลาทำงาน', labelKo: '출퇴근', icon: '⏰', href: '/attendance' },
-  { key: 'leaves',        labelTh: 'การลา', labelKo: '휴가/병가', icon: '🗓️', href: '/leaves' },
-  { key: 'expenses',      labelTh: 'ค่าใช้จ่าย', labelKo: '경비 청구', icon: '💰', href: '/expenses' },
-  { key: 'documents',     labelTh: 'เอกสารของฉัน', labelKo: '내 서류함', icon: '📄', href: '/documents/my-documents' },
-]
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -19,11 +12,11 @@ export default function DashboardPage() {
   const [todayRecord, setTodayRecord] = useState(null)
   const [checking, setChecking] = useState(false)
   const [gpsError, setGpsError] = useState('')
-  const [balance, setBalance] = useState(null)
+
   const [adminStats, setAdminStats] = useState({ employees: 0, todayAttendance: 0, onLeave: 0, pendingLeaves: 0 })
   const [announcements, setAnnouncements] = useState([])
-  const [menuItems, setMenuItems] = useState(DEFAULT_MENU)
   const [officeLocation, setOfficeLocation] = useState(null)
+  const [myWarnings, setMyWarnings] = useState([])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -35,21 +28,22 @@ export default function DashboardPage() {
     fetchTodayAttendance()
     fetchAnnouncements()
     fetchSettings()
-    if (!isAdmin) fetchBalance()
+    if (!isAdmin) fetchMyWarnings()
     if (isAdmin) fetchAdminStats()
   }, [session])
+
+  const fetchMyWarnings = async () => {
+    try {
+      const res = await fetch('/api/warnings')
+      const data = await res.json()
+      setMyWarnings(Array.isArray(data) ? data : [])
+    } catch {}
+  }
 
   const fetchSettings = async () => {
     try {
       const res = await fetch('/api/settings')
       const data = await res.json()
-      if (data.menuItems) {
-        const items = DEFAULT_MENU.filter(m => {
-          const s = data.menuItems[m.key]
-          return s ? s.visible !== false : true
-        })
-        setMenuItems(items)
-      }
       if (data.officeLocation) setOfficeLocation(data.officeLocation)
     } catch {}
   }
@@ -69,14 +63,6 @@ export default function DashboardPage() {
       const res = await fetch('/api/announcements')
       const data = await res.json()
       setAnnouncements(Array.isArray(data) ? data.slice(0, 5) : [])
-    } catch {}
-  }
-
-  const fetchBalance = async () => {
-    try {
-      const res = await fetch('/api/leaves/balance')
-      const data = await res.json()
-      if (data.balance) setBalance(data.balance)
     } catch {}
   }
 
@@ -176,14 +162,6 @@ export default function DashboardPage() {
     { label: 'รออนุมัติ', value: `${adminStats.pendingLeaves} รายการ`, icon: '⏳', color: '#ef4444' },
   ]
 
-  const empStatCards = [
-    { label: 'วันลาพักร้อนคงเหลือ', value: balance ? `${balance.annual?.remaining ?? '-'} วัน` : '- วัน', icon: '🌴', color: '#4f62f7' },
-    { label: 'วันลาป่วยคงเหลือ', value: balance ? `${balance.sick?.remaining ?? '-'} วัน` : '- วัน', icon: '🏥', color: '#22c55e' },
-    { label: 'วันลากิจคงเหลือ', value: balance ? `${balance.personal?.remaining ?? '-'} วัน` : '- วัน', icon: '🌸', color: '#f59e0b' },
-  ]
-
-  const stats = isAdmin ? adminStatCards : empStatCards
-
   return (
     <div>
       <div style={{ marginBottom: 28 }}>
@@ -244,16 +222,45 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 통계 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 24 }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 20px' }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>{s.label}</div>
+      {/* 관리자 통계 */}
+      {isAdmin && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 24 }}>
+          {adminStatCards.map((s, i) => (
+            <div key={i} style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 20px' }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+
+      {/* 내 경고장 */}
+      {!isAdmin && myWarnings.length > 0 && (
+        <a href="/warnings" style={{ textDecoration: 'none', display: 'block', marginBottom: 16 }}>
+          <div style={{
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.3)',
+            borderRadius: 16, padding: '16px 20px',
+            display: 'flex', alignItems: 'flex-start', gap: 14,
+          }}>
+            <span style={{ fontSize: 22, flexShrink: 0, marginTop: 2 }}>⚠️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, color: '#f87171', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                หนังสือเตือน ({myWarnings.length} ครั้ง)
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9', marginBottom: 4 }}>
+                {['1차', '2차', '3차'][myWarnings[0].warning_number - 1] || `${myWarnings[0].warning_number}차`} 경고장
+              </div>
+              <div style={{ fontSize: 12, color: '#8b91ab', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {myWarnings[0].reason_1 || myWarnings[0].reason}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#8b91ab', flexShrink: 0 }}>{myWarnings[0].issued_at}</div>
           </div>
-        ))}
-      </div>
+        </a>
+      )}
 
       {/* 공지사항 */}
       <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
@@ -277,29 +284,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* 빠른 메뉴 (직원용, 설정 연동) */}
-      {!isAdmin && menuItems.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9', marginBottom: 14 }}>เมนูด่วน</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
-            {menuItems.map((item) => (
-              <a key={item.key} href={item.href} style={{ textDecoration: 'none' }}>
-                <div style={{
-                  background: '#141828', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 14, padding: '20px 16px', textAlign: 'center', cursor: 'pointer',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(79,98,247,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)' }}
-                >
-                  <div style={{ fontSize: 26, marginBottom: 8 }}>{item.icon}</div>
-                  <div style={{ fontSize: 12, color: '#f1f3f9', fontWeight: 600 }}>{item.labelTh}</div>
-                  <div style={{ fontSize: 10, color: '#8b91ab', marginTop: 2 }}>{item.labelKo}</div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
