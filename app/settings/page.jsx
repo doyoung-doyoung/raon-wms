@@ -67,7 +67,8 @@ export default function SettingsPage() {
   const [newHoliday, setNewHoliday] = useState({ date: '', name: '' })
   const [saved, setSaved] = useState(false)
   const [officeLocation, setOfficeLocation] = useState({ lat: '13.8199', lng: '100.5601', radius: 20, enabled: false })
-  const [checkInTime, setCheckInTime] = useState('09:00')
+  const [checkInTime, setCheckInTime]   = useState('09:00')
+  const [checkOutTime, setCheckOutTime] = useState('18:00')
 
   // 퇴사 처리
   const [employees, setEmployees] = useState([])
@@ -104,7 +105,8 @@ export default function SettingsPage() {
         setMenuSettings(newSettings)
       }
       if (data.officeLocation) setOfficeLocation(data.officeLocation)
-      if (data.checkInTime) setCheckInTime(data.checkInTime)
+      if (data.checkInTime)  setCheckInTime(data.checkInTime)
+      if (data.checkOutTime) setCheckOutTime(data.checkOutTime)
     }).catch(() => {})
   }, [])
 
@@ -126,7 +128,7 @@ export default function SettingsPage() {
     await fetch('/api/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ menuItems, officeLocation, checkInTime }),
+      body: JSON.stringify({ menuItems, officeLocation, checkInTime, checkOutTime }),
     })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -284,20 +286,40 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          {/* 출근 시간 설정 */}
+          {/* 출퇴근 시간 설정 */}
           <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 24px', marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', margin: '0 0 4px' }}>⏰ 출근 시간 기준</h3>
-            <p style={{ fontSize: 12, color: '#8b91ab', marginTop: 0, marginBottom: 16 }}>이 시간 이후 출근 시 리포트에 지각으로 집계됩니다</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input
-                type="time"
-                value={checkInTime}
-                onChange={e => setCheckInTime(e.target.value)}
-                style={{ ...inputStyle, width: 140, fontSize: 18, fontWeight: 700, textAlign: 'center', padding: '10px 14px' }}
-              />
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', margin: '0 0 4px' }}>⏰ 출퇴근 시간 기준</h3>
+            <p style={{ fontSize: 12, color: '#8b91ab', marginTop: 0, marginBottom: 20 }}>리포트 지각/조기퇴근 집계 기준 시간</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 13, color: '#f1f3f9', fontWeight: 500 }}>{checkInTime} 이후 = 지각</div>
-                <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>기본값: 09:00</div>
+                <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 8, fontWeight: 600 }}>출근 시간</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="time"
+                    value={checkInTime}
+                    onChange={e => setCheckInTime(e.target.value)}
+                    style={{ ...inputStyle, width: 130, fontSize: 18, fontWeight: 700, textAlign: 'center', padding: '10px 14px' }}
+                  />
+                  <div>
+                    <div style={{ fontSize: 12, color: '#f1f3f9', fontWeight: 500 }}>{checkInTime} 이후 = 지각</div>
+                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>기본값: 09:00</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 8, fontWeight: 600 }}>퇴근 시간</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="time"
+                    value={checkOutTime}
+                    onChange={e => setCheckOutTime(e.target.value)}
+                    style={{ ...inputStyle, width: 130, fontSize: 18, fontWeight: 700, textAlign: 'center', padding: '10px 14px' }}
+                  />
+                  <div>
+                    <div style={{ fontSize: 12, color: '#f1f3f9', fontWeight: 500 }}>{checkOutTime} 이전 = 조기퇴근</div>
+                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>기본값: 18:00</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
