@@ -36,6 +36,8 @@
     "expenses": "경비 청구",
     "partners": "파트너 관리",
     "invoices": "견적서 / 인보이스",
+    "quotations": "견적서 / 인보이스",
+    "clients": "고객 관리",
     "announcements": "공지사항",
     "settings": "설정",
     "groups": {

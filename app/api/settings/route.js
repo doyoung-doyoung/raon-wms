@@ -11,6 +11,8 @@ export const DEFAULT_SETTINGS = {
     expenses:      { labelTh: 'ค่าใช้จ่าย', labelKo: '경비 청구', icon: '💰', href: '/expenses', visible: true },
     documents:     { labelTh: 'เอกสารของฉัน', labelKo: '내 서류함', icon: '📄', href: '/documents/my-documents', visible: true },
     warnings:      { labelTh: 'หนังสือเตือน', labelKo: '경고장', icon: '⚠️', href: '/warnings', visible: false },
+    quotations:    { labelTh: 'ใบเสนอราคา', labelKo: '견적서/인보이스', icon: '📄', href: '/quotations', visible: true },
+    clients:       { labelTh: 'ลูกค้า\u00A0', labelKo: '고객 관리', icon: '👥', href: '/clients', visible: false },
   },
   officeLocation: {
     lat: '13.8199',

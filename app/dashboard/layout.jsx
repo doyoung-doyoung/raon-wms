@@ -83,6 +83,8 @@ export default function DashboardLayout({ children }) {
     {
       group: 'accounting',
       items: [
+        { href: '/quotations', icon: '📋', labelKey: 'nav.quotations' },
+        { href: '/clients',    icon: '👥', labelKey: 'nav.clients' },
         { href: '/partners', icon: '🤝', labelKey: 'nav.partners', adminOnly: true },
         { href: '/invoices', icon: '💼', labelKey: 'nav.invoices', adminOnly: true },
       ]

@@ -43,6 +43,9 @@ async function run() {
     } else if (type === 'leave-approval') {
       const mod = await import('../lib/pdf/leaveApproval.jsx')
       Component = mod.default
+    } else if (type === 'quotation' || type === 'invoice' || type === 'receipt') {
+      const mod = await import('../lib/pdf/quotationPdf.jsx')
+      Component = mod.default
     }
 
     const element = createElement(Component, { data })

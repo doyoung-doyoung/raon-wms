@@ -36,6 +36,8 @@
     "expenses": "เบิกค่าใช้จ่าย",
     "partners": "จัดการพาร์ทเนอร์",
     "invoices": "ใบเสนอราคา / ใบแจ้งหนี้",
+    "quotations": "ใบเสนอราคา\u00A0",
+    "clients": "ลูกค้า\u00A0",
     "announcements": "ประกาศ",
     "settings": "ตั้งค่า",
     "groups": {

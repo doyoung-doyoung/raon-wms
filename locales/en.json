@@ -36,6 +36,8 @@
     "expenses": "Expenses",
     "partners": "Partners",
     "invoices": "Quotation / Invoice",
+    "quotations": "Quotations",
+    "clients": "Clients",
     "announcements": "Announcements",
     "settings": "Settings",
     "groups": {
