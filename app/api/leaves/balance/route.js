@@ -35,7 +35,7 @@ export async function GET(request) {
     // 직원 정보에서 입사일 가져오기
     const employees = await readSheet(EMPLOYEES_SHEET_ID)
     const employee  = employees.find(e => e.email === email)
-    const startDate = employee?.startDate || null
+    const startDate = employee?.start_date || null
     const annualLimit = getAnnualLimit(startDate)
 
     // 휴가 내역 가져오기

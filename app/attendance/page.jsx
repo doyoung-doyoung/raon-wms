@@ -201,13 +201,25 @@ export default function AttendancePage() {
               <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>출근</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#4ade80' }}>{record.check_in || '-'}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: record.is_late === 'true' ? '#f59e0b' : '#4ade80' }}>
+                      {record.check_in || '-'}
+                    </span>
+                    {record.is_late === 'true' && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>지각</span>
+                    )}
+                  </div>
                 </div>
                 <div style={{ color: '#8b91ab' }}>→</div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>퇴근</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: record.check_out ? '#f87171' : '#8b91ab' }}>
-                    {record.check_out || '-'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: record.check_out ? (record.is_early === 'true' ? '#f97316' : '#f87171') : '#8b91ab' }}>
+                      {record.check_out || '-'}
+                    </span>
+                    {record.is_early === 'true' && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(249,115,22,0.15)', color: '#f97316' }}>조퇴</span>
+                    )}
                   </div>
                 </div>
               </div>

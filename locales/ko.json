@@ -51,7 +51,8 @@
     "reports": "업무 리포트",
     "myDocuments": "내 서류함",
     "documentRequest": "서류 발급 신청",
-    "documentApprove": "서류 발급 승인"
+    "documentApprove": "서류 발급 승인",
+    "payroll": "급여 관리"
   },
   "dashboard": {
     "greeting": "안녕하세요, {{name}}님 👋",

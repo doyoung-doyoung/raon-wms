@@ -254,7 +254,7 @@ export default function DashboardPage() {
                 {['1차', '2차', '3차'][myWarnings[0].warning_number - 1] || `${myWarnings[0].warning_number}차`} 경고장
               </div>
               <div style={{ fontSize: 12, color: '#8b91ab', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {myWarnings[0].reason_1 || myWarnings[0].reason}
+                {myWarnings[0].reason1 || myWarnings[0].reason}
               </div>
             </div>
             <div style={{ fontSize: 11, color: '#8b91ab', flexShrink: 0 }}>{myWarnings[0].issued_at}</div>

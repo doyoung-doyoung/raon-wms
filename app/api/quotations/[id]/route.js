@@ -2,6 +2,7 @@ import { auth } from '../../auth/[...nextauth]/route'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 import { generateQuotationPdf } from '../../../../lib/pdf/generate'
 import { sendMail } from '../../../../lib/email'
+import { randomUUID } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -213,15 +214,38 @@ export async function PATCH(request, { params }) {
       const docType = q.status === 'paid' ? 'receipt'
         : (q.status === 'invoiced' ? 'invoice' : 'quotation')
 
-      const pdfData  = buildPdfData(q, docType)
+      const pdfData   = buildPdfData(q, docType)
       const pdfBuffer = await generateQuotationPdf(pdfData)
 
-      const emailTo  = body.email || q.client_email
+      const emailTo = body.email || q.client_email
       if (!emailTo) return Response.json({ error: '이메일 주소를 입력해주세요.' }, { status: 400 })
 
       const labels   = { quotation: 'Quotation', invoice: 'Invoice', receipt: 'Receipt' }
       const docLabel = labels[docType]
       const docNum   = docType === 'quotation' ? q.number : q.invoice_number
+
+      // 견적서 발송 시: 고객 승인 링크 생성
+      let approvalSection = ''
+      if (docType === 'quotation' && q.status === 'approved') {
+        const token = randomUUID()
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const approvalUrl = `${baseUrl}/approve/${token}`
+        await updateRow(SHEET_ID, SHEET_NAME, id, {
+          ...q,
+          approval_token:    token,
+          approval_token_at: now,
+          updated_at:        now,
+        })
+        approvalSection = `
+          <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+            <p style="color: #15803d; font-weight: 600; margin: 0 0 8px;">Please review and approve this quotation</p>
+            <p style="color: #166534; font-size: 13px; margin: 0 0 16px;">Click the button below to confirm your approval</p>
+            <a href="${approvalUrl}" style="display: inline-block; background: #22c55e; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
+              ✓ Approve Quotation
+            </a>
+            <p style="color: #6b7280; font-size: 11px; margin: 12px 0 0;">This link can only be used once. Valid for this quotation only.</p>
+          </div>`
+      }
 
       await sendMail({
         to: emailTo,
@@ -247,6 +271,7 @@ export async function PATCH(request, { params }) {
                   </tr>
                 </table>
               </div>
+              ${approvalSection}
               <p style="color: #475569; font-size: 13px;">For any questions, please contact us at raonthailand23@gmail.com or +66(0)62 124 7979.</p>
             </div>
             <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 16px;">

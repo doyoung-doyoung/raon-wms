@@ -51,7 +51,8 @@
     "reports": "รายงาน",
     "myDocuments": "เอกสารของฉัน",
     "documentRequest": "ขอเอกสาร",
-    "documentApprove": "อนุมัติเอกสาร"
+    "documentApprove": "อนุมัติเอกสาร",
+    "payroll": "จัดการเงินเดือน"
   },
   "dashboard": {
     "greeting": "สวัสดี, {{name}} 👋",

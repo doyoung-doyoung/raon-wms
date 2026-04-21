@@ -20,6 +20,7 @@ export default function ReportsPage() {
   const [loading, setLoading]           = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailSent, setEmailSent]       = useState(false)
+  const [docDetailEmp, setDocDetailEmp] = useState(null) // 선택된 직원 서류 상세 모달
 
   useEffect(() => {
     if (status === 'unauthenticated' || (status === 'authenticated' && !session?.isAdmin)) {
@@ -299,12 +300,181 @@ export default function ReportsPage() {
 
           {/* ===== 서류 발행 ===== */}
           <SectionTitle>📄 서류 발행 현황</SectionTitle>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
             <StatCard label="재직증명서"  value={`${report.documents.salaryVerifications}건`} icon="📋" color="#38bdf8" />
             <StatCard label="급여명세서"  value={`${report.documents.payslips}건`}            icon="💳" color="#a78bfa" />
             <StatCard label="휴가 승인서" value={`${report.documents.leaveApprovals}건`}      icon="🗓️" color="#f59e0b" />
             <StatCard label="경고장"      value={`${report.documents.warnings}건`}            icon="⚠️" color={report.documents.warnings > 0 ? '#f87171' : '#4ade80'} />
           </div>
+
+          {/* 직원별 HR 서류 발급 현황 */}
+          {(report.documents.byEmployee || []).length > 0 && (
+            <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab' }}>직원별 서류 신청 현황</span>
+                <span style={{ fontSize: 11, color: '#3d4260' }}>행 클릭 시 상세 내역</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(56,189,248,0.06)' }}>
+                    {['직원', '📋 재직증명서', '💳 급여명세서', '합계'].map(h => (
+                      <th key={h} style={{ padding: '9px 14px', textAlign: h === '직원' ? 'left' : 'center', fontSize: 12, color: '#8b91ab', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.documents.byEmployee.map((emp, i) => (
+                    <tr key={i}
+                      onClick={() => setDocDetailEmp(emp)}
+                      style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)', cursor: 'pointer', transition: 'background 0.12s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(56,189,248,0.06)'}
+                      onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)'}
+                    >
+                      <td style={{ padding: '9px 14px', fontSize: 13, color: '#38bdf8', fontWeight: 600 }}>
+                        {emp.name} <span style={{ fontSize: 10, color: '#3d4260', marginLeft: 4 }}>▶</span>
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {emp.salaryCert > 0 ? <span style={{ fontSize: 13, fontWeight: 600, color: '#38bdf8' }}>{emp.salaryCert}건</span> : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {emp.payslip > 0 ? <span style={{ fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>{emp.payslip}건</span> : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#f1f3f9', background: 'rgba(56,189,248,0.1)', padding: '2px 10px', borderRadius: 6 }}>{emp.total}건</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 서류 상세 모달 */}
+          {docDetailEmp && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+              onClick={e => e.target === e.currentTarget && setDocDetailEmp(null)}>
+              <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, width: 600, maxWidth: '94vw', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                {/* 모달 헤더 */}
+                <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#f1f3f9' }}>📋 {docDetailEmp.name}</div>
+                    <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>
+                      서류 신청 내역 · 총 {docDetailEmp.total}건
+                      {docDetailEmp.salaryCert > 0 && <span style={{ marginLeft: 8, color: '#38bdf8' }}>재직증명서 {docDetailEmp.salaryCert}건</span>}
+                      {docDetailEmp.payslip > 0   && <span style={{ marginLeft: 8, color: '#a78bfa' }}>급여명세서 {docDetailEmp.payslip}건</span>}
+                    </div>
+                  </div>
+                  <button onClick={() => setDocDetailEmp(null)}
+                    style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#8b91ab', width: 30, height: 30, borderRadius: 8, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    ✕
+                  </button>
+                </div>
+
+                {/* 상세 목록 */}
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead style={{ position: 'sticky', top: 0 }}>
+                      <tr style={{ background: '#1a2035' }}>
+                        {['서류 종류', '신청일', '상태', '메모'].map(h => (
+                          <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, color: '#8b91ab', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(docDetailEmp.details || []).map((d, i) => {
+                        const statusInfo = {
+                          approved: { label: '승인완료', color: '#4ade80', bg: 'rgba(74,222,128,0.1)' },
+                          pending:  { label: '대기중',   color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+                          rejected: { label: '반려',     color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
+                        }[d.status] || { label: d.status, color: '#8b91ab', bg: 'rgba(255,255,255,0.06)' }
+                        const typeColor = d.type === 'salary_certificate' ? '#38bdf8' : '#a78bfa'
+                        return (
+                          <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                            <td style={{ padding: '10px 16px' }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: typeColor }}>{d.typeLabel}</span>
+                            </td>
+                            <td style={{ padding: '10px 16px', fontSize: 12, color: '#c4c7d6' }}>
+                              {d.requestedAt ? d.requestedAt.slice(0, 10) : '-'}
+                              {d.requestedAt && <div style={{ fontSize: 11, color: '#8b91ab' }}>{d.requestedAt.slice(11, 16)}</div>}
+                            </td>
+                            <td style={{ padding: '10px 16px' }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: statusInfo.color, background: statusInfo.bg, padding: '2px 8px', borderRadius: 5 }}>
+                                {statusInfo.label}
+                              </span>
+                              {d.approvedAt && <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>승인: {d.approvedAt.slice(0, 10)}</div>}
+                            </td>
+                            <td style={{ padding: '10px 16px', fontSize: 12, color: '#8b91ab' }}>
+                              {d.note || '-'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== 견적서 / 인보이스 현황 ===== */}
+          <SectionTitle>💼 견적서 / 인보이스 현황</SectionTitle>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
+            <StatCard label="견적서 생성"  value={`${report.quotations?.created ?? 0}건`}   icon="📝" color="#818cf8" />
+            <StatCard label="인보이스 발행" value={`${report.quotations?.invoiced ?? 0}건`}  icon="📋" color="#a78bfa" />
+            <StatCard label="결제 완료"     value={`${report.quotations?.paid ?? 0}건`}      icon="✅" color="#4ade80" />
+            <StatCard label="수금 금액"     value={`฿${(report.quotations?.totalRevenue ?? 0).toLocaleString()}`} icon="💰" color="#fbbf24" />
+          </div>
+
+          {/* 담당자별 견적서/인보이스 현황 */}
+          {(report.quotations?.byCreator || []).length > 0 && (
+            <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 12, fontWeight: 600, color: '#8b91ab' }}>
+                담당자별 견적서 / 인보이스 현황
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: 'rgba(79,98,247,0.08)' }}>
+                    {['담당자', '📝 견적서', '📋 인보이스', '✅ 결제완료', '💰 수금액'].map(h => (
+                      <th key={h} style={{ padding: '9px 14px', textAlign: h === '담당자' ? 'left' : 'center', fontSize: 12, color: '#8b91ab', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.quotations.byCreator.map((c, i) => (
+                    <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                      <td style={{ padding: '9px 14px', fontSize: 13, color: '#f1f3f9', fontWeight: 600 }}>{c.name}</td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {c.created > 0 ? <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 600 }}>{c.created}</span> : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {c.invoiced > 0 ? <span style={{ fontSize: 13, color: '#a78bfa', fontWeight: 600 }}>{c.invoiced}</span> : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {c.paid > 0 ? <span style={{ fontSize: 13, color: '#4ade80', fontWeight: 600 }}>{c.paid}</span> : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                      <td style={{ padding: '9px 14px', textAlign: 'center' }}>
+                        {c.revenue > 0
+                          ? <span style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', background: 'rgba(251,191,36,0.1)', padding: '2px 10px', borderRadius: 6 }}>
+                              ฿{Math.round(c.revenue).toLocaleString()}
+                            </span>
+                          : <span style={{ color: '#3d4260', fontSize: 12 }}>-</span>}
+                      </td>
+                    </tr>
+                  ))}
+                  {/* 합계 행 */}
+                  <tr style={{ borderTop: '2px solid rgba(79,98,247,0.2)', background: 'rgba(79,98,247,0.05)' }}>
+                    <td style={{ padding: '9px 14px', fontSize: 12, fontWeight: 700, color: '#8b91ab' }}>합계</td>
+                    <td style={{ padding: '9px 14px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#818cf8' }}>{report.quotations.created}</td>
+                    <td style={{ padding: '9px 14px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>{report.quotations.invoiced}</td>
+                    <td style={{ padding: '9px 14px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#4ade80' }}>{report.quotations.paid}</td>
+                    <td style={{ padding: '9px 14px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: '#fbbf24' }}>
+                      ฿{report.quotations.totalRevenue.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* ===== 경고장 상세 ===== */}
           {report.warnings.byEmployee.length > 0 && (

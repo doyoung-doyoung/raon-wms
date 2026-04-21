@@ -1,6 +1,7 @@
 import { auth } from '../auth/[...nextauth]/route'
 import { readSheet, appendRow, updateRow, generateId } from '../../../lib/google/sheets'
 import { getSettingsCache } from '../../../lib/settingsCache'
+import { DEFAULT_SETTINGS } from '../settings/route'
 
 const SHEET_ID = process.env.SHEETS_ATTENDANCE_ID
 
@@ -84,8 +85,14 @@ export async function POST(request) {
     const records = await readSheet(SHEET_ID)
     const todayRecord = records.find(r => r.employee_id === session.user.email && r.date === today)
 
+    // 설정에서 출/퇴근 기준 시간 읽기
+    const settingsData = settings || DEFAULT_SETTINGS
+    const checkInTime  = settingsData.checkInTime  || '09:00'
+    const checkOutTime = settingsData.checkOutTime || '18:00'
+
     if (type === 'checkin') {
       if (todayRecord) return Response.json({ error: 'ลงเวลาเข้างานแล้ว / 이미 출근했습니다.' }, { status: 400 })
+      const isLate = time > checkInTime
       const newRecord = {
         id:            generateId(),
         employee_id:   session.user.email,
@@ -93,6 +100,8 @@ export async function POST(request) {
         date:          today,
         check_in:      time,
         check_out:     '',
+        is_late:       isLate ? 'true' : 'false',
+        is_early:      'false',
         work_type:     'office',
         ip_address:    '',
         gps_lat:       lat ? String(lat) : '',
@@ -102,14 +111,19 @@ export async function POST(request) {
         custom_6: '', custom_7: '', custom_8: '', custom_9: '', custom_10: '',
       }
       await appendRow(SHEET_ID, 'Sheet1', newRecord)
-      return Response.json({ success: true, record: newRecord })
+      return Response.json({ success: true, record: newRecord, isLate })
     }
 
     if (type === 'checkout') {
       if (!todayRecord) return Response.json({ error: 'ยังไม่ได้ลงเวลาเข้างาน / 출근 기록이 없습니다.' }, { status: 400 })
       if (todayRecord.check_out) return Response.json({ error: 'ลงเวลาออกงานแล้ว / 이미 퇴근했습니다.' }, { status: 400 })
-      await updateRow(SHEET_ID, 'Sheet1', todayRecord.id, { check_out: time, work_type: 'completed' })
-      return Response.json({ success: true })
+      const isEarly = time < checkOutTime
+      await updateRow(SHEET_ID, 'Sheet1', todayRecord.id, {
+        check_out: time,
+        is_early:  isEarly ? 'true' : 'false',
+        work_type: 'completed',
+      })
+      return Response.json({ success: true, isEarly })
     }
 
     return Response.json({ error: 'Invalid type' }, { status: 400 })

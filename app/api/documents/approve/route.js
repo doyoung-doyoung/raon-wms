@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { auth } from '../../auth/[...nextauth]/route'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 import { generateSalaryCertificate, generatePayslip } from '../../../../lib/pdf/generate.js'
 import { sendMail } from '../../../../lib/email'
@@ -9,9 +10,13 @@ export const dynamic = 'force-dynamic'
 const SHEET_ID = process.env.SHEETS_DOCUMENTS_ID
 const SHEET_NAME = '문서발급요청'
 const EMP_SHEET_ID = process.env.SHEETS_EMPLOYEES_ID
+const PAYROLL_SHEET_ID = process.env.SHEETS_PAYROLL_ID
 
 export async function POST(request) {
   try {
+    const session = await auth()
+    if (!session?.isAdmin) return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
+
     const body = await request.json()
     const { requestId, approved, directorId } = body
 
@@ -66,19 +71,41 @@ export async function POST(request) {
       docLabel = 'หนังสือรับรองเงินเดือน (Salary Certificate)'
 
     } else if (req.documentType === 'payslip') {
+      // 가장 최근 payroll 기록 조회 (해당 직원)
+      const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      let payrollRecord = null
+      if (PAYROLL_SHEET_ID) {
+        try {
+          const payrolls = await readSheet(PAYROLL_SHEET_ID)
+          // 이번 달 먼저 찾고, 없으면 가장 최근 기록 사용
+          const empPayrolls = payrolls.filter(p =>
+            (p.employee_id === req.employeeId || p.employee_email === emp.email) && p.status !== 'deleted'
+          )
+          payrollRecord = empPayrolls.find(p => p.year_month === yearMonth)
+            || empPayrolls.sort((a, b) => b.year_month.localeCompare(a.year_month))[0]
+        } catch { /* payroll 없어도 기본값으로 진행 */ }
+      }
+
       const data = {
-        periodTh: `${thaiMonths[now.getMonth()]} ${thaiYear}`,
-        periodEn: `${enMonths[now.getMonth()]} ${now.getFullYear()}`,
-        payDateTh: issueDateTh,
-        nameTh: emp.name_th || emp.name_ko || emp.name,
-        nameEn: emp.name_en || emp.name,
+        periodTh:   `${thaiMonths[now.getMonth()]} ${thaiYear}`,
+        periodEn:   `${enMonths[now.getMonth()]} ${now.getFullYear()}`,
+        payDateTh:  issueDateTh,
+        nameTh:     emp.name_th || emp.name_ko || emp.name,
+        nameEn:     emp.name_en || emp.name,
         employeeId: emp.national_id || emp.id,
-        position: emp.position,
+        position:   emp.position,
         startDateTh: emp.start_date || '-',
         startDateEn: emp.start_date || '-',
-        baseSalary: Number(emp.salary) || 0,
-        housing: 0, transport: 0, meal: 0, ot: 0, otherIncome: 0,
-        tax: 0, socialSecurity: 875, otherDeduction: 0,
+        baseSalary:          Number(payrollRecord?.base_salary    || emp.salary || 0),
+        housing:             Number(payrollRecord?.housing         || 0),
+        transport:           Number(payrollRecord?.transport       || 0),
+        meal:                Number(payrollRecord?.meal            || 0),
+        ot:                  Number(payrollRecord?.ot              || 0),
+        otherIncome:         Number(payrollRecord?.other_income    || 0),
+        expenseReimbursement: Number(payrollRecord?.expense_total  || 0),
+        tax:                 Number(payrollRecord?.tax             || 0),
+        socialSecurity:      Number(payrollRecord?.social_security || 875),
+        otherDeduction:      Number(payrollRecord?.other_deduction || 0),
         directorName: adminName,
         directorRole: adminRole,
       }

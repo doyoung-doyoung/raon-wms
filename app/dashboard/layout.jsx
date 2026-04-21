@@ -67,6 +67,7 @@ export default function DashboardLayout({ children }) {
         { href: '/employees', icon: '👥', labelKey: 'nav.employees', adminOnly: true },
         { href: '/attendance', icon: '⏰', labelKey: 'nav.attendance' },
         { href: '/leaves', icon: '🗓️', labelKey: 'nav.leaves' },
+        { href: '/payroll', icon: '💰', labelKey: 'nav.payroll', adminOnly: true },
       ]
     },
     {
@@ -86,7 +87,6 @@ export default function DashboardLayout({ children }) {
         { href: '/quotations', icon: '📋', labelKey: 'nav.quotations' },
         { href: '/clients',    icon: '👥', labelKey: 'nav.clients' },
         { href: '/partners', icon: '🤝', labelKey: 'nav.partners', adminOnly: true },
-        { href: '/invoices', icon: '💼', labelKey: 'nav.invoices', adminOnly: true },
       ]
     },
     {

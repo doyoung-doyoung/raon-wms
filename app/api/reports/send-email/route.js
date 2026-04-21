@@ -18,7 +18,7 @@ export async function POST(request) {
 
   const { year, month } = body
   const reportYear = year || new Date().getFullYear()
-  const reportMonth = month || new Date().getMonth() // 전월
+  const reportMonth = month || new Date().getMonth() + 1
 
   try {
     // TODO: Google Sheets에서 실제 데이터 집계

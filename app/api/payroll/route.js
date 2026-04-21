@@ -10,13 +10,13 @@ export async function GET(request) {
     if (!session?.isAdmin) return Response.json({ error: 'Admin only' }, { status: 403 })
 
     const { searchParams } = new URL(request.url)
-    const yearMonth = searchParams.get('year_month') // e.g. "2026-04"
+    const yearMonth  = searchParams.get('year_month')
     const employeeId = searchParams.get('employee_id')
 
     const records = await readSheet(SHEET_ID)
 
     let filtered = records
-    if (yearMonth) filtered = filtered.filter(r => r.year_month === yearMonth)
+    if (yearMonth)  filtered = filtered.filter(r => r.year_month === yearMonth)
     if (employeeId) filtered = filtered.filter(r => r.employee_id === employeeId)
 
     return Response.json(filtered)
@@ -32,41 +32,49 @@ export async function POST(request) {
     if (!session?.isAdmin) return Response.json({ error: 'Admin only' }, { status: 403 })
 
     const body = await request.json()
-    const { employee_id, employee_email, employee_name, year_month, base_salary, notes } = body
+    const {
+      employee_id, employee_email, employee_name, year_month,
+      base_salary,
+      housing = 0, transport = 0, meal = 0, ot = 0, other_income = 0,
+      tax = 0, social_security = 875, other_deduction = 0,
+      notes = '',
+    } = body
 
     if (!employee_id || !year_month) {
       return Response.json({ error: '직원과 급여월을 선택해주세요.' }, { status: 400 })
     }
 
-    // 중복 체크
     const existing = await readSheet(SHEET_ID)
     const dup = existing.find(r => r.employee_id === employee_id && r.year_month === year_month)
     if (dup) {
       return Response.json({ error: '해당 직원의 해당 월 급여 기록이 이미 존재합니다.' }, { status: 400 })
     }
 
-    // 해당 월 승인된 경비 합산
     const expenses = await readSheet(EXPENSES_SHEET_ID)
-    const approvedExpenses = expenses.filter(e =>
-      e.employee_email === employee_email &&
-      e.status === 'approved' &&
-      e.expense_date?.startsWith(year_month)
-    )
-    const expenseTotal = approvedExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
+    const expenseTotal = expenses
+      .filter(e => e.employee_email === employee_email && e.status === 'approved' && e.expense_date?.startsWith(year_month))
+      .reduce((sum, e) => sum + Number(e.amount || 0), 0)
 
     const record = {
-      id:            generateId(),
+      id:              generateId(),
       employee_id,
       employee_email,
       employee_name,
       year_month,
-      base_salary:   String(base_salary || 0),
-      expense_total: String(expenseTotal),
-      status:        'pending',
-      paid_at:       '',
-      paid_by:       '',
-      notes:         notes || '',
-      custom_1: '', custom_2: '', custom_3: '',
+      base_salary:     String(base_salary || 0),
+      housing:         String(housing),
+      transport:       String(transport),
+      meal:            String(meal),
+      ot:              String(ot),
+      other_income:    String(other_income),
+      tax:             String(tax),
+      social_security: String(social_security),
+      other_deduction: String(other_deduction),
+      expense_total:   String(expenseTotal),
+      status:          'pending',
+      paid_at:         '',
+      paid_by:         '',
+      notes,
     }
 
     await appendRow(SHEET_ID, 'Sheet1', record)
@@ -82,7 +90,8 @@ export async function PATCH(request) {
     const session = await auth()
     if (!session?.isAdmin) return Response.json({ error: 'Admin only' }, { status: 403 })
 
-    const { id, action } = await request.json()
+    const body = await request.json()
+    const { id, action } = body
     const today = new Date().toISOString().slice(0, 10)
 
     if (action === 'mark_paid') {
@@ -94,9 +103,42 @@ export async function PATCH(request) {
       return Response.json({ success: true })
     }
 
+    if (action === 'update') {
+      const {
+        base_salary, housing, transport, meal, ot, other_income,
+        tax, social_security, other_deduction, notes,
+      } = body
+      await updateRow(SHEET_ID, 'Sheet1', id, {
+        base_salary:     String(base_salary || 0),
+        housing:         String(housing || 0),
+        transport:       String(transport || 0),
+        meal:            String(meal || 0),
+        ot:              String(ot || 0),
+        other_income:    String(other_income || 0),
+        tax:             String(tax || 0),
+        social_security: String(social_security || 0),
+        other_deduction: String(other_deduction || 0),
+        notes:           notes || '',
+      })
+      return Response.json({ success: true })
+    }
+
     return Response.json({ error: '알 수 없는 액션' }, { status: 400 })
   } catch (error) {
     console.error('PATCH payroll error:', error)
+    return Response.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const session = await auth()
+    if (!session?.isAdmin) return Response.json({ error: 'Admin only' }, { status: 403 })
+
+    const { id } = await request.json()
+    await updateRow(SHEET_ID, 'Sheet1', id, { status: 'deleted' })
+    return Response.json({ success: true })
+  } catch (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }
 }

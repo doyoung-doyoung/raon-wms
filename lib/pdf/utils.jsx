@@ -2,10 +2,10 @@ import React from 'react'
 import { StyleSheet, Text, View } from '@react-pdf/renderer'
 
 export const COMPANY_HEADER = {
-  name: ' บริษัท ราอน(ไทยแลนด์) จำกัด ',
-  addr1: '349 อาคารเอสเจ อินฟินิท วัน บิสซิเนส คอมเพล็กซ์ ชั้นที่ 29 ห้องเลขที่ 2901-2907',
-  addr2: 'ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร',
-  addr3: 'โทร 062-124-7979 | raonthailand23@gmail.com',
+  name: process.env.COMPANY_NAME_TH || ' บริษัท ราอน(ไทยแลนด์) จำกัด ',
+  addr1: process.env.COMPANY_ADDR_TH1 || '349 อาคารเอสเจ อินฟินิท วัน บิสซิเนส คอมเพล็กซ์ ชั้นที่ 29 ห้องเลขที่ 2901-2907',
+  addr2: process.env.COMPANY_ADDR_TH2 || 'ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร',
+  addr3: `โทร ${process.env.COMPANY_PHONE || '062-124-7979'} | ${process.env.COMPANY_EMAIL || 'raonthailand23@gmail.com'}`,
 }
 
 export const headerStyles = StyleSheet.create({

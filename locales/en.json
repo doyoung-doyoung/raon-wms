@@ -51,7 +51,8 @@
     "reports": "Reports",
     "myDocuments": "My Documents",
     "documentRequest": "Request Document",
-    "documentApprove": "Approve Documents"
+    "documentApprove": "Approve Documents",
+    "payroll": "Payroll"
   },
   "dashboard": {
     "greeting": "Hello, {{name}} 👋",

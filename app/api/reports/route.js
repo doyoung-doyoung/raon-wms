@@ -23,13 +23,14 @@ export async function GET(request) {
     const year = parseInt(searchParams.get('year') || new Date().getFullYear())
     const month = searchParams.get('month') ? parseInt(searchParams.get('month')) : null
 
-    const [employees, attendance, leaves, warnings, expenses, documents] = await Promise.all([
+    const [employees, attendance, leaves, warnings, expenses, documents, quotations] = await Promise.all([
       readSheet(process.env.SHEETS_EMPLOYEES_ID).catch(() => []),
       readSheet(process.env.SHEETS_ATTENDANCE_ID).catch(() => []),
       readSheet(process.env.SHEETS_LEAVES_ID).catch(() => []),
       readSheet(process.env.SHEETS_WARNINGS_ID).catch(() => []),
       readSheet(process.env.SHEETS_EXPENSES_ID).catch(() => []),
       readSheet(process.env.SHEETS_DOCUMENTS_ID, '문서발급요청').catch(() => []),
+      readSheet(process.env.SHEETS_QUOTATIONS_ID).catch(() => []),
     ])
 
     // 설정에서 출근 시간 읽기
@@ -116,10 +117,74 @@ export async function GET(request) {
     const expensePending  = periodExpenses.filter(e => e.status === 'pending').reduce((s, e) => s + parseFloat(e.amount || 0), 0)
 
     // ===== 서류 발행 =====
-    // requestedAt은 ISO 문자열(2026-04-09T...) — inPeriod가 startsWith로 처리
     const periodDocs = documents.filter(d => inPeriod(d.requestedAt, year, month))
-    const docSalaryCert = periodDocs.filter(d => d.documentType === 'salary_certificate').length
+    const docSalaryCert = periodDocs.filter(d => d.documentType === 'salary-certificate' || d.documentType === 'salary_certificate').length
     const docPayslip    = periodDocs.filter(d => d.documentType === 'payslip').length
+
+    // 직원별 서류 발행 현황
+    const DOC_LABELS = {
+      salary_certificate: '재직증명서',
+      payslip: '급여명세서',
+    }
+    const docByEmployeeMap = {}
+    periodDocs.forEach(d => {
+      const key = d.employeeId || d.employeeNameTh || d.employeeNameEn || 'Unknown'
+      if (!docByEmployeeMap[key]) {
+        docByEmployeeMap[key] = {
+          name: d.employeeNameTh || d.employeeNameEn || d.employeeId || key,
+          salaryCert: 0,
+          payslip: 0,
+          total: 0,
+          details: [],
+        }
+      }
+      if (d.documentType === 'salary-certificate' || d.documentType === 'salary_certificate') docByEmployeeMap[key].salaryCert++
+      if (d.documentType === 'payslip')            docByEmployeeMap[key].payslip++
+      docByEmployeeMap[key].total++
+      docByEmployeeMap[key].details.push({
+        id:          d.id || '',
+        type:        d.documentType || '',
+        typeLabel:   DOC_LABELS[d.documentType] || DOC_LABELS[d.documentType?.replace('-','_')] || d.documentType || '-',
+        requestedAt: d.requestedAt || '',
+        status:      d.status || 'pending',
+        note:        d.requestNote || '',
+        approvedAt:  d.approvedAt || '',
+        approvedBy:  d.approvedBy || '',
+      })
+    })
+    const docByEmployee = Object.values(docByEmployeeMap)
+      .sort((a, b) => b.total - a.total)
+      .map(e => ({ ...e, details: e.details.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)) }))
+
+    // ===== 견적서 / 인보이스 현황 =====
+    // 생성 기준
+    const periodQuotationsCreated  = quotations.filter(q => inPeriod(q.created_at, year, month))
+    // 인보이스 발행 기준
+    const periodInvoiced = quotations.filter(q => q.invoice_number && inPeriod(q.invoiced_at, year, month))
+    // 결제 완료 기준
+    const periodPaid     = quotations.filter(q => q.status === 'paid' && inPeriod(q.paid_at, year, month))
+
+    const quotationSummary = {
+      created:      periodQuotationsCreated.length,
+      invoiced:     periodInvoiced.length,
+      paid:         periodPaid.length,
+      totalRevenue: Math.round(periodPaid.reduce((s, q) => s + Number(q.grand_total || 0), 0)),
+    }
+
+    // 담당자별 견적서/인보이스 현황
+    const quotByCreatorMap = {}
+    const addToMap = (q, field) => {
+      const key = q.created_by_email || 'unknown'
+      if (!quotByCreatorMap[key]) {
+        quotByCreatorMap[key] = { name: q.created_by_name || key, created: 0, invoiced: 0, paid: 0, revenue: 0 }
+      }
+      quotByCreatorMap[key][field]++
+      if (field === 'paid') quotByCreatorMap[key].revenue += Number(q.grand_total || 0)
+    }
+    periodQuotationsCreated.forEach(q => addToMap(q, 'created'))
+    periodInvoiced.forEach(q => addToMap(q, 'invoiced'))
+    periodPaid.forEach(q => addToMap(q, 'paid'))
+    const quotByCreator = Object.values(quotByCreatorMap).sort((a, b) => b.revenue - a.revenue)
 
     const period = month
       ? `${year}년 ${month}월`
@@ -161,6 +226,11 @@ export async function GET(request) {
         payslips:            docPayslip,
         leaveApprovals:      periodLeaves.length,
         warnings:            periodWarnings.length,
+        byEmployee:          docByEmployee,
+      },
+      quotations: {
+        ...quotationSummary,
+        byCreator: quotByCreator,
       },
     })
   } catch (error) {

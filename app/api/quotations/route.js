@@ -92,6 +92,8 @@ export async function POST(request) {
       paid_note:              '',
       created_at:             now,
       updated_at:             now,
+      approval_token:         '',
+      approval_token_at:      '',
     }
 
     await appendRow(SHEET_ID, SHEET_NAME, record)
