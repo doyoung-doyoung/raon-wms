@@ -150,7 +150,10 @@ export default function PartnersPage() {
           <h1 style={s.title}>🤝 파트너 관리</h1>
           <p style={s.sub}>협력업체 및 외주사 정보를 관리합니다</p>
         </div>
-        {isAdmin && <button style={s.btn} onClick={openNew}>+ New Partner</button>}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          {isAdmin && <button style={s.btn} onClick={openNew}>+ New Partner</button>}
+        </div>
       </div>
 
       {/* 검색 + 필터 */}

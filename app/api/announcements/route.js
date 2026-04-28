@@ -3,6 +3,7 @@ import { auth } from '../auth/[...nextauth]/route'
 import { readSheet, appendRow, generateId } from '../../../lib/google/sheets'
 import { generateAnnouncement } from '../../../lib/pdf/generate.js'
 import { sendMail } from '../../../lib/email'
+import { createHmac } from 'crypto'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -57,6 +58,7 @@ export async function POST(request) {
       authorImage: session.user.image || '',
       pinned: pinned ? 'true' : 'false',
       createdAt: now.toISOString().slice(0, 10),
+      confirmed_by: '[]',
     }
 
     // Sheets에 저장
@@ -74,15 +76,25 @@ export async function POST(request) {
 
     const fileName = `announcement_${now.toISOString().slice(0, 10)}_${newItem.id}.pdf`
 
+    // 직원별 확인 토큰 생성
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const makeConfirmUrl = (empEmail) => {
+      const hmac = createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret')
+        .update(newItem.id).digest('hex').slice(0, 20)
+      const token = `${newItem.id}-${hmac}`
+      return `${baseUrl}/announce-confirm/${token}?email=${encodeURIComponent(empEmail)}`
+    }
+
     // 전체 직원 이메일 발송
     const employees = await readSheet(EMP_SHEET_ID, 'Sheet1')
     const emailList = employees
-      .map(e => e.email)
-      .filter(e => e && e.includes('@'))
+      .map(e => ({ email: e.email, name: e.name_th || e.name_ko || e.name_en || '' }))
+      .filter(e => e.email && e.email.includes('@'))
 
-    for (const email of emailList) {
+    for (const emp of emailList) {
+      const confirmUrl = makeConfirmUrl(emp.email)
       await sendMail({
-        to: email,
+        to: emp.email,
         subject: `[RAON] ประกาศ / 공지사항: ${title}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 24px; border-radius: 12px;">
@@ -93,6 +105,11 @@ export async function POST(request) {
             <div style="background: white; border-radius: 12px; padding: 32px; margin-top: 12px;">
               <h2 style="color: #1e293b; margin-top: 0;">${title}</h2>
               <p style="color: #475569; white-space: pre-wrap; line-height: 1.8;">${content}</p>
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+                <p style="color: #15803d; font-weight: 600; margin: 0 0 8px;">ยืนยันการรับทราบประกาศ / 공지 확인</p>
+                <p style="color: #166534; font-size: 13px; margin: 0 0 16px;">กรุณากดปุ่มด้านล่างเพื่อยืนยันว่าท่านได้รับทราบประกาศนี้แล้ว</p>
+                <a href="${confirmUrl}" style="display: inline-block; background: #22c55e; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">✓ รับทราบ / 확인했습니다</a>
+              </div>
               <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;" />
               <p style="color: #64748b; font-size: 12px;">${issueDateTh}</p>
               <p style="color: #64748b; font-size: 12px;">${directorName} | กรรมการบริษัท</p>
@@ -102,13 +119,7 @@ export async function POST(request) {
             </p>
           </div>
         `,
-        attachments: [
-          {
-            filename: fileName,
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-          }
-        ],
+        attachments: [{ filename: fileName, content: pdfBuffer, contentType: 'application/pdf' }],
       })
     }
 

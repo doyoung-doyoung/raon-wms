@@ -128,7 +128,7 @@ export default function ReportsPage() {
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>📊 업무 리포트</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>📊 업무 리포트</h1><a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a></div>
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>
             생성일: {report?.generatedAt || new Date().toISOString().slice(0, 10)}
           </p>

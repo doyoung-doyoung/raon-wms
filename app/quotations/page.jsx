@@ -73,7 +73,7 @@ export default function QuotationsPage() {
     <div style={s.page}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={s.title}>📄 Quotations</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}><h1 style={s.title}>📄 Quotations</h1><a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a></div>
           <p style={{ ...s.sub, marginBottom: 0 }}>견적서·인보이스·영수증을 관리합니다</p>
         </div>
         <button

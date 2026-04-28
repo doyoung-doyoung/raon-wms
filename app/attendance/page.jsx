@@ -84,7 +84,9 @@ export default function AttendancePage() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>บันทึกเวลา</h1>
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>ทั้งหมด {records.length} รายการ</p>
         </div>
-        <input
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <input
           type="date"
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}

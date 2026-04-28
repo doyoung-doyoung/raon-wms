@@ -93,7 +93,10 @@ export default function ClientsPage() {
           <h1 style={s.title}>👥 Client Management</h1>
           <p style={s.sub}>견적서·인보이스에 사용할 고객 정보를 관리합니다</p>
         </div>
-        <button style={s.btn} onClick={openNew}>+ New Client</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <button style={s.btn} onClick={openNew}>+ New Client</button>
+        </div>
       </div>
 
       {/* Search + Stats */}

@@ -162,7 +162,7 @@ export default function PayrollPage() {
     <div style={s.page}>
       {/* 헤더 */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>💰 급여 관리</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}><h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>💰 급여 관리</h1><a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a></div>
         <p style={{ fontSize: 13, color: '#8b91ab', marginTop: 4 }}>직원별 월급을 입력하고 지급 처리하세요</p>
       </div>
 

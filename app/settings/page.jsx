@@ -69,6 +69,7 @@ export default function SettingsPage() {
   const [officeLocation, setOfficeLocation] = useState({ lat: '13.8199', lng: '100.5601', radius: 20, enabled: false })
   const [checkInTime, setCheckInTime]   = useState('09:00')
   const [checkOutTime, setCheckOutTime] = useState('18:00')
+  const [mapLinkInput, setMapLinkInput] = useState('')
 
   // 퇴사 처리
   const [employees, setEmployees] = useState([])
@@ -232,7 +233,9 @@ export default function SettingsPage() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>⚙️ 설정</h1>
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>관리자 전용 시스템 설정</p>
         </div>
-        <button onClick={handleSave} style={{
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <button onClick={handleSave} style={{
           padding: '9px 24px',
           background: saved ? 'rgba(34,197,94,0.15)' : '#4f62f7',
           color: saved ? '#4ade80' : '#fff',
@@ -241,6 +244,7 @@ export default function SettingsPage() {
         }}>
           {saved ? '✓ 저장됨' : '저장'}
         </button>
+        </div>
       </div>
 
       {/* 탭 */}
@@ -346,14 +350,16 @@ export default function SettingsPage() {
                 <input
                   placeholder="https://maps.google.com/... 또는 좌표 링크"
                   style={{ ...inputStyle, flex: 1 }}
+                  value={mapLinkInput}
+                  onChange={e => setMapLinkInput(e.target.value)}
                   onPaste={e => {
-                    e.preventDefault()
                     const text = e.clipboardData.getData('text')
-                    parseGoogleMapsUrl(text)
+                    setTimeout(() => parseGoogleMapsUrl(text), 0)
                   }}
-                  onChange={() => {}}
-                  value=""
                 />
+                <button onClick={() => { parseGoogleMapsUrl(mapLinkInput); setMapLinkInput('') }} style={{ padding: '8px 14px', background: 'rgba(79,98,247,0.15)', border: '1px solid rgba(79,98,247,0.3)', borderRadius: 8, color: '#818cf8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  적용
+                </button>
                 <button onClick={detectCurrentLocation} style={{ padding: '8px 14px', background: 'rgba(79,98,247,0.15)', border: '1px solid rgba(79,98,247,0.3)', borderRadius: 8, color: '#818cf8', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                   📍 현재 위치
                 </button>

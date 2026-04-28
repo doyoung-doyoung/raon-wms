@@ -128,7 +128,9 @@ export default function WarningsPage() {
           </h1>
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>총 {visibleWarnings.length}건</p>
         </div>
-        {isAdmin && (
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          {isAdmin && (
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={handleAutoCheck}
@@ -153,6 +155,7 @@ export default function WarningsPage() {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* 직원용 안내 배너 */}

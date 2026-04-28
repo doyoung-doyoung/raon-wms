@@ -15,7 +15,7 @@ export default function DocumentRequestPage() {
   const [submitted, setSubmitted] = useState(false)
   const [empInfo, setEmpInfo] = useState(null)
 
- useEffect(() => {
+  useEffect(() => {
     if (!session?.user?.email) return
     fetch('/api/employees/me')
       .then(r => r.json())
@@ -23,6 +23,11 @@ export default function DocumentRequestPage() {
         if (data?.id || data?.email) {
           setEmpInfo(data)
           loadMyRequests(data.id || data.email)
+        } else {
+          // 직원 시트에 없어도 세션 정보로 fallback
+          const fallback = { id: session.user.email, email: session.user.email, name: session.user.name, name_th: session.user.name, name_en: session.user.name }
+          setEmpInfo(fallback)
+          loadMyRequests(session.user.email)
         }
       })
   }, [session])
