@@ -96,7 +96,7 @@ export default function WarningLetterPDF({ data }) {
 
         <Text style={styles.bodyText}>{'บริษัทขอให้ท่านปรับปรุงพฤติกรรมดังกล่าวโดยเร็ว หากท่านยังคงกระทำการในลักษณะดังกล่าวซ้ำอีก\u00A0'}</Text>
         <Text style={styles.bodyText}>{'ขอสงวนสิทธิ์ในการดำเนินการตามระเบียบและข้อบังคับของบริษัทอย่างเคร่งครัดต่อไป\u00A0'}</Text>
-        <Text style={styles.bodyText}>{'หนังสือเตือนฉบับนี้ถือเป็นส่วนหนึ่งของบันทึกการจ้างงานของท่าน / This letter will be kept as part of your employment record.\u00A0'}</Text>
+        <Text style={styles.bodyText}>{'หนังสือเตือนฉบับนี้ถือเป็นส่วนหนึ่งของบันทึกการจ้างงานของท่าน \u00A0'}</Text>
 
         <View style={styles.sigArea}>
           <Text style={styles.sigLabel}>{'กรรมการบริษัท / Authorized Signatory'}</Text>

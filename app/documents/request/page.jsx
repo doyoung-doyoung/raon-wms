@@ -20,9 +20,9 @@ export default function DocumentRequestPage() {
     fetch('/api/employees/me')
       .then(r => r.json())
       .then(data => {
-        if (data.employee) {
-          setEmpInfo(data.employee)
-          loadMyRequests(data.employee.id)
+        if (data?.id || data?.email) {
+          setEmpInfo(data)
+          loadMyRequests(data.id || data.email)
         }
       })
   }, [session])

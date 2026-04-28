@@ -48,7 +48,8 @@ export default function PayslipPage() {
       .then(data => {
         const emps = Array.isArray(data) ? data : (data.employees || [])
         setEmployees(emps)
-        setDirectors(emps.filter(e => e.isDirector === true || e.isDirector === 'true'))
+        const dirs = emps.filter(e => e.isDirector === true || e.isDirector === 'true')
+        setDirectors(dirs.length > 0 ? dirs : emps)
       })
   }, [])
 

@@ -147,43 +147,43 @@ export default function AnnouncementPDF({ data }) {
         <Watermark />
         <DocHeader />
 
-        <Text style={styles.date}>{issueDate}</Text>
+        <Text style={styles.date}>{(issueDate || '') + ' '}</Text>
 
-        <Text style={styles.docTitle}>ประกาศ</Text>
+        <Text style={styles.docTitle}>{'ประกาศ '}</Text>
 
         <View style={styles.topicRow}>
-          <Text style={styles.topicLabel}>เรื่อง</Text>
-          <Text style={styles.topicValue}>{title}</Text>
+          <Text style={styles.topicLabel}>{'เรื่อง '}</Text>
+          <Text style={styles.topicValue}>{(title || '') + ' '}</Text>
         </View>
         <View style={styles.toRow}>
-          <Text style={styles.toLabel}>เรียน</Text>
-          <Text style={styles.toValue}>พนักงานทุกท่าน</Text>
+          <Text style={styles.toLabel}>{'เรียน '}</Text>
+          <Text style={styles.toValue}>{'พนักงานทุกท่าน '}</Text>
         </View>
 
         {paragraphs.map((p, i) => (
-          <Text key={i} style={styles.contentBlock}>{p}</Text>
+          <Text key={i} style={styles.contentBlock}>{p + ' '}</Text>
         ))}
 
         <View style={styles.signSection}>
-          <Text style={styles.signLabel}>ลงรายมือชื่อ เพื่อเป็นการรับทราบเนื้อหา</Text>
+          <Text style={styles.signLabel}>{'ลงรายมือชื่อ เพื่อเป็นการรับทราบเนื้อหา '}</Text>
 
           <View style={styles.companyRow}>
             <View style={styles.companyBox}>
-              <Text style={{ fontSize: 10, color: '#666666', marginBottom: 6 }}>บริษัท</Text>
+              <Text style={{ fontSize: 10, color: '#666666', marginBottom: 6 }}>{'บริษัท '}</Text>
               <Image style={styles.sigImage} src={sigPath} />
               <View style={styles.sigLine} />
-              <Text style={styles.sigName}>{directorName}</Text>
-              <Text style={styles.sigRole}>{directorRole || 'กรรมการบริษัท'}</Text>
+              <Text style={styles.sigName}>{(directorName || '') + ' '}</Text>
+              <Text style={styles.sigRole}>{(directorRole || 'กรรมการบริษัท') + ' '}</Text>
             </View>
           </View>
 
-          <Text style={styles.empSignTitle}>พนักงาน</Text>
+          <Text style={styles.empSignTitle}>{'พนักงาน '}</Text>
           {[...Array(8)].map((_, i) => (
             <View key={i} style={styles.empRow}>
               <View style={styles.empBox} />
               <Text style={styles.empLabel}> </Text>
               <View style={styles.empNameLine} />
-              <Text style={styles.empLabel}>ตำแหน่ง</Text>
+              <Text style={styles.empLabel}>{'ตำแหน่ง '}</Text>
               <View style={styles.empPosLine} />
             </View>
           ))}

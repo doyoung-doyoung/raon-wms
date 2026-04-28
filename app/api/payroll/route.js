@@ -50,9 +50,14 @@ export async function POST(request) {
       return Response.json({ error: '해당 직원의 해당 월 급여 기록이 이미 존재합니다.' }, { status: 400 })
     }
 
+    const [ym, mm] = year_month.split('-').map(Number)
+    const prevMonthStr = mm === 1
+      ? `${ym - 1}-12`
+      : `${ym}-${String(mm - 1).padStart(2, '0')}`
+
     const expenses = await readSheet(EXPENSES_SHEET_ID)
     const expenseTotal = expenses
-      .filter(e => e.employee_email === employee_email && e.status === 'approved' && e.expense_date?.startsWith(year_month))
+      .filter(e => e.employee_email === employee_email && e.status === 'approved' && e.expense_date?.startsWith(prevMonthStr))
       .reduce((sum, e) => sum + Number(e.amount || 0), 0)
 
     const record = {

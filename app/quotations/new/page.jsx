@@ -111,8 +111,8 @@ export default function NewQuotationPage() {
   const tot = calcTotals(items, mgmtRate, clientType)
 
   const handleSave = async () => {
-    if (!client.name.trim()) { toast.error('Client name is required.'); return }
-    if (items.every(it => !it.name.trim())) { toast.error('At least one item is required.'); return }
+    if (!client.name.trim()) { toast.error('กรุณาใส่ชื่อลูกค้า'); return }
+    if (items.every(it => !it.name.trim())) { toast.error('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ'); return }
 
     setSaving(true)
     try {
@@ -147,7 +147,7 @@ export default function NewQuotationPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create quotation')
-      toast.success(`Quotation ${data.quotation?.number} created!`)
+      toast.success(`สร้างใบเสนอราคา ${data.quotation?.number} เรียบร้อย!`)
       router.push(`/quotations/${data.quotation?.id}`)
     } catch (err) { toast.error(err.message) }
     finally { setSaving(false) }
@@ -158,17 +158,17 @@ export default function NewQuotationPage() {
   return (
     <div style={s.page}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={s.title}>📝 New Quotation</h1>
-        <p style={s.sub}>새 견적서를 작성합니다</p>
+        <h1 style={s.title}>📝 ใบเสนอราคาใหม่</h1>
+        <p style={s.sub}>สร้างใบเสนอราคาใหม่</p>
       </div>
 
       {/* ── STEP 1: Document Type ── */}
       <div style={s.sec}>
-        <div style={s.secH}>1️⃣ Document Type</div>
+        <div style={s.secH}>1️⃣ ประเภทเอกสาร</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {[
-            { v: 'domestic',      label: '🇹🇭 Thailand',      sub: 'THB · VAT 7% + WHT 3%', color: '#4f62f7' },
-            { v: 'international', label: '🌍 International', sub: 'USD · No VAT / No WHT',  color: '#f59e0b' },
+            { v: 'domestic',      label: '🇹🇭 ไทย',      sub: 'THB · VAT 7% + WHT 3%', color: '#4f62f7' },
+            { v: 'international', label: '🌍 ต่างประเทศ', sub: 'USD · ไม่มี VAT / WHT',  color: '#f59e0b' },
           ].map(o => (
             <div key={o.v} onClick={() => onTypeChange(o.v)}
               style={{ padding: '16px 20px', borderRadius: 10, border: `2px solid ${clientType === o.v ? o.color : 'rgba(255,255,255,0.08)'}`, background: clientType === o.v ? `${o.color}15` : 'transparent', cursor: 'pointer', transition: 'all 0.15s' }}>
@@ -181,27 +181,27 @@ export default function NewQuotationPage() {
 
       {/* ── STEP 2: Client ── */}
       <div style={s.sec}>
-        <div style={s.secH}>2️⃣ Client Information</div>
+        <div style={s.secH}>2️⃣ ข้อมูลลูกค้า</div>
 
         {/* Select from DB */}
         <div style={{ marginBottom: 14 }}>
-          <label style={s.lbl}>Select Client from Database</label>
+          <label style={s.lbl}>เลือกลูกค้าจากฐานข้อมูล</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select style={{ ...s.sel, flex: 1 }} value={selClient} onChange={e => { onClientSelect(e.target.value); setManualClient(false) }}>
-              <option value="">— Select a client —</option>
+              <option value="">— เลือกลูกค้า —</option>
               {filteredClients.map(c => (
                 <option key={c.id} value={c.id}>{c.name}{c.email ? ` (${c.email})` : ''}</option>
               ))}
             </select>
             <button style={s.btnSm('rgba(255,255,255,0.06)', '#8b91ab')}
               onClick={() => { setSelClient(''); setClient({ name: '', address: '', taxId: '', email: '', tel: '' }); setManualClient(true) }}>
-              + Enter Manually
+              + กรอกเอง
             </button>
           </div>
           {filteredClients.length === 0 && (
             <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 6 }}>
-              No {clientType === 'domestic' ? 'Thailand' : 'international'} clients in database.
-              <a href="/clients" target="_blank" style={{ color: '#818cf8', marginLeft: 4 }}>Add one →</a>
+              ไม่มีลูกค้า{clientType === 'domestic' ? 'ในประเทศ' : 'ต่างประเทศ'}ในฐานข้อมูล
+              <a href="/clients" target="_blank" style={{ color: '#818cf8', marginLeft: 4 }}>เพิ่ม →</a>
             </div>
           )}
         </div>
@@ -210,29 +210,29 @@ export default function NewQuotationPage() {
         {(selClient || manualClient) && (
           <div style={s.grid2}>
             <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-              <label style={s.lbl}>Company Name *</label>
-              <input style={s.inp} value={client.name} onChange={e => setClient(c => ({ ...c, name: e.target.value }))} placeholder="Client company name" readOnly={!!selClient && !manualClient} />
+              <label style={s.lbl}>ชื่อบริษัท *</label>
+              <input style={s.inp} value={client.name} onChange={e => setClient(c => ({ ...c, name: e.target.value }))} placeholder="ชื่อบริษัทลูกค้า" readOnly={!!selClient && !manualClient} />
             </div>
             <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-              <label style={s.lbl}>Address</label>
-              <input style={s.inp} value={client.address} onChange={e => setClient(c => ({ ...c, address: e.target.value }))} placeholder="Client address" readOnly={!!selClient && !manualClient} />
+              <label style={s.lbl}>ที่อยู่</label>
+              <input style={s.inp} value={client.address} onChange={e => setClient(c => ({ ...c, address: e.target.value }))} placeholder="ที่อยู่ลูกค้า" readOnly={!!selClient && !manualClient} />
             </div>
             {clientType === 'domestic' && (
               <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-                <label style={s.lbl}>Tax ID</label>
+                <label style={s.lbl}>เลขประจำตัวผู้เสียภาษี</label>
                 <input style={s.inp} value={client.taxId} onChange={e => setClient(c => ({ ...c, taxId: e.target.value }))} placeholder="0 1234 56789 01 2" readOnly={!!selClient && !manualClient} />
               </div>
             )}
             <div style={{ marginBottom: 12 }}>
-              <label style={s.lbl}>Email</label>
+              <label style={s.lbl}>อีเมล</label>
               <input style={s.inp} value={client.email} onChange={e => setClient(c => ({ ...c, email: e.target.value }))} placeholder="contact@client.com" readOnly={!!selClient && !manualClient} />
             </div>
             <div style={{ marginBottom: 12 }}>
-              <label style={s.lbl}>Phone / Tel</label>
+              <label style={s.lbl}>โทรศัพท์</label>
               <input style={s.inp} value={client.tel} onChange={e => setClient(c => ({ ...c, tel: e.target.value }))} placeholder="+66 2 xxx xxxx" readOnly={!!selClient && !manualClient} />
             </div>
             <div style={{ marginBottom: 0 }}>
-              <label style={s.lbl}>Currency</label>
+              <label style={s.lbl}>สกุลเงิน</label>
               <select style={s.sel} value={currency} onChange={e => setCurrency(e.target.value)}>
                 {clientType === 'domestic'
                   ? <option value="THB">THB — Thai Baht</option>
@@ -248,7 +248,7 @@ export default function NewQuotationPage() {
         )}
         {!selClient && !manualClient && (
           <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, fontSize: 13, color: '#8b91ab', textAlign: 'center' }}>
-            Select a client from the list or enter manually
+            เลือกลูกค้าจากรายการหรือกรอกเอง
           </div>
         )}
       </div>
@@ -256,39 +256,39 @@ export default function NewQuotationPage() {
       {/* ── STEP 3: Items ── */}
       <div style={s.sec}>
         <div style={{ ...s.secH, justifyContent: 'space-between' }}>
-          <span>3️⃣ Service Items</span>
-          <button style={s.btnSm('#4f62f7', '#fff')} onClick={addItem}>+ Add Item</button>
+          <span>3️⃣ รายการบริการ</span>
+          <button style={s.btnSm('#4f62f7', '#fff')} onClick={addItem}>+ เพิ่มรายการ</button>
         </div>
 
         {items.map((item, idx) => (
           <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 16, marginBottom: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9' }}>Item {idx + 1}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9' }}>รายการที่ {idx + 1}</span>
               {items.length > 1 && (
-                <button style={s.btnSm('rgba(248,113,113,0.12)', '#f87171')} onClick={() => removeItem(idx)}>Remove</button>
+                <button style={s.btnSm('rgba(248,113,113,0.12)', '#f87171')} onClick={() => removeItem(idx)}>ลบ</button>
               )}
             </div>
 
             {/* Item name */}
             <div style={{ marginBottom: 10 }}>
-              <label style={s.lbl}>Service / Product Name</label>
-              <input style={s.inp} value={item.name} onChange={e => updateItem(idx, 'name', e.target.value)} placeholder="e.g. IT Consulting Service" />
+              <label style={s.lbl}>ชื่อบริการ / สินค้า</label>
+              <input style={s.inp} value={item.name} onChange={e => updateItem(idx, 'name', e.target.value)} placeholder="เช่น IT Consulting Service" />
             </div>
 
             {/* Qty, Unit Price, Total */}
             <div style={s.grid3}>
               <div>
-                <label style={s.lbl}>Quantity (Unit)</label>
+                <label style={s.lbl}>จำนวน (หน่วย)</label>
                 <input type="number" min="0" style={s.numInp} value={item.qty}
                   onChange={e => updateItem(idx, 'qty', e.target.value)} />
               </div>
               <div>
-                <label style={s.lbl}>Unit Price ({currency})</label>
+                <label style={s.lbl}>ราคาต่อหน่วย ({currency})</label>
                 <input type="number" min="0" style={s.numInp} value={item.unitPrice}
                   onChange={e => updateItem(idx, 'unitPrice', e.target.value)} />
               </div>
               <div>
-                <label style={s.lbl}>Total ({currency})</label>
+                <label style={s.lbl}>รวม ({currency})</label>
                 <div style={{ padding: '9px 13px', background: 'rgba(79,98,247,0.08)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 8, color: '#a5b4fc', fontSize: 13, fontWeight: 600 }}>
                   {Number(item.total).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
@@ -298,21 +298,21 @@ export default function NewQuotationPage() {
             {/* Details */}
             <div style={{ marginTop: 12 }}>
               <label style={{ ...s.lbl, marginBottom: 8 }}>
-                Detail Lines
-                <span style={{ color: '#555', marginLeft: 6 }}>(optional — shown as bullet points)</span>
+                รายละเอียด
+                <span style={{ color: '#555', marginLeft: 6 }}>(ไม่บังคับ — แสดงเป็นรายการย่อย)</span>
               </label>
               {item.details.map((d, di) => (
                 <div key={di} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
                   <span style={{ color: '#8b91ab', paddingTop: 9, fontSize: 13 }}>–</span>
                   <input style={{ ...s.inp, flex: 1 }} value={d} onChange={e => updateDetail(idx, di, e.target.value)}
-                    placeholder={`Detail ${di + 1}`} />
+                    placeholder={`รายละเอียด ${di + 1}`} />
                   <button style={{ ...s.btnSm('transparent', '#8b91ab'), padding: '4px 8px', border: '1px solid rgba(255,255,255,0.1)' }}
                     onClick={() => removeDetail(idx, di)}>×</button>
                 </div>
               ))}
               {item.details.length < 12 && (
                 <button style={s.btnSm('rgba(255,255,255,0.05)', '#8b91ab')} onClick={() => addDetailRow(idx)}>
-                  + Add Detail Line
+                  + เพิ่มรายละเอียด
                 </button>
               )}
             </div>
@@ -322,47 +322,47 @@ export default function NewQuotationPage() {
 
       {/* ── STEP 4: Fee & Terms ── */}
       <div style={s.sec}>
-        <div style={s.secH}>4️⃣ Fee & Terms</div>
+        <div style={s.secH}>4️⃣ ค่าธรรมเนียม & เงื่อนไข</div>
         <div style={s.grid3}>
           <div>
-            <label style={s.lbl}>Management Fee (%)</label>
+            <label style={s.lbl}>ค่าบริหารจัดการ (%)</label>
             <input type="number" min="0" max="100" style={s.numInp} value={mgmtRate}
               onChange={e => setMgmtRate(e.target.value)} placeholder="0" />
           </div>
           <div>
-            <label style={s.lbl}>Payment Due (days)</label>
+            <label style={s.lbl}>กำหนดชำระ (วัน)</label>
             <input type="number" min="1" style={s.numInp} value={payDays}
               onChange={e => setPayDays(e.target.value)} />
           </div>
           <div />
         </div>
         <div style={{ marginTop: 14 }}>
-          <label style={s.lbl}>Remark</label>
+          <label style={s.lbl}>หมายเหตุ</label>
           <textarea style={{ ...s.inp, height: 64, resize: 'vertical' }} value={remark}
-            onChange={e => setRemark(e.target.value)} placeholder="Optional remark for this quotation..." />
+            onChange={e => setRemark(e.target.value)} placeholder="หมายเหตุเพิ่มเติม..." />
         </div>
       </div>
 
       {/* ── STEP 5: Summary ── */}
       <div style={s.sec}>
-        <div style={s.secH}>5️⃣ Summary</div>
+        <div style={s.secH}>5️⃣ สรุป</div>
         <div style={{ maxWidth: 360 }}>
           <div style={s.totRow}>
-            <span style={{ color: '#8b91ab', fontSize: 13 }}>Items Subtotal</span>
+            <span style={{ color: '#8b91ab', fontSize: 13 }}>รวมสินค้า</span>
             <span style={{ color: '#f1f3f9', fontSize: 13 }}>
               {tot.itemsSum.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
             </span>
           </div>
           {Number(mgmtRate) > 0 && (
             <div style={s.totRow}>
-              <span style={{ color: '#8b91ab', fontSize: 13 }}>Management Fee ({mgmtRate}%)</span>
+              <span style={{ color: '#8b91ab', fontSize: 13 }}>ค่าบริหารจัดการ ({mgmtRate}%)</span>
               <span style={{ color: '#f1f3f9', fontSize: 13 }}>
                 {tot.mgmtAmt.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
               </span>
             </div>
           )}
           <div style={s.totRow}>
-            <span style={{ color: '#f1f3f9', fontSize: 13, fontWeight: 600 }}>Total Amount (A)</span>
+            <span style={{ color: '#f1f3f9', fontSize: 13, fontWeight: 600 }}>รวมทั้งหมด (A)</span>
             <span style={{ color: '#f1f3f9', fontSize: 13, fontWeight: 600 }}>
               {tot.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
             </span>
@@ -376,13 +376,13 @@ export default function NewQuotationPage() {
                 </span>
               </div>
               <div style={s.totRow}>
-                <span style={{ color: '#8b91ab', fontSize: 13 }}>WHT 3% (C)</span>
+                <span style={{ color: '#8b91ab', fontSize: 13 }}>ภาษีหัก ณ ที่จ่าย 3% (C)</span>
                 <span style={{ color: '#f87171', fontSize: 13 }}>
                   − {tot.whtAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
                 </span>
               </div>
               <div style={s.totGT}>
-                <span style={{ color: '#f1f3f9', fontSize: 15, fontWeight: 700 }}>Grand Total (A+B−C)</span>
+                <span style={{ color: '#f1f3f9', fontSize: 15, fontWeight: 700 }}>ยอดรวมสุทธิ (A+B−C)</span>
                 <span style={{ color: '#4ade80', fontSize: 15, fontWeight: 700 }}>
                   {tot.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
                 </span>
@@ -391,7 +391,7 @@ export default function NewQuotationPage() {
           )}
           {clientType === 'international' && (
             <div style={s.totGT}>
-              <span style={{ color: '#f1f3f9', fontSize: 15, fontWeight: 700 }}>Grand Total</span>
+              <span style={{ color: '#f1f3f9', fontSize: 15, fontWeight: 700 }}>ยอดรวมสุทธิ</span>
               <span style={{ color: '#4ade80', fontSize: 15, fontWeight: 700 }}>
                 {tot.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} {currency}
               </span>
@@ -404,10 +404,10 @@ export default function NewQuotationPage() {
       <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginBottom: 40 }}>
         <button style={{ ...s.btn, background: 'rgba(255,255,255,0.06)', color: '#8b91ab' }}
           onClick={() => router.push('/quotations')}>
-          Cancel
+          ยกเลิก
         </button>
         <button style={{ ...s.btn, opacity: saving ? 0.6 : 1 }} onClick={handleSave} disabled={saving}>
-          {saving ? 'Creating...' : '💾 Save as Draft'}
+          {saving ? 'กำลังสร้าง...' : '💾 บันทึกร่าง'}
         </button>
       </div>
     </div>

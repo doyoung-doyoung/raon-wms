@@ -2,7 +2,7 @@ import { auth } from '../../auth/[...nextauth]/route'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 import { generateQuotationPdf } from '../../../../lib/pdf/generate'
 import { sendMail } from '../../../../lib/email'
-import { randomUUID } from 'crypto'
+import { createHmac } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -224,18 +224,13 @@ export async function PATCH(request, { params }) {
       const docLabel = labels[docType]
       const docNum   = docType === 'quotation' ? q.number : q.invoice_number
 
-      // 견적서 발송 시: 고객 승인 링크 생성
+      // 견적서 발송 시: 고객 승인 링크 생성 (HMAC 기반, 시트 컬럼 불필요)
       let approvalSection = ''
       if (docType === 'quotation' && q.status === 'approved') {
-        const token = randomUUID()
+        const hmac = createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback-secret').update(q.id).digest('hex').slice(0, 24)
+        const token = `${q.id}-${hmac}`
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
         const approvalUrl = `${baseUrl}/approve/${token}`
-        await updateRow(SHEET_ID, SHEET_NAME, id, {
-          ...q,
-          approval_token:    token,
-          approval_token_at: now,
-          updated_at:        now,
-        })
         approvalSection = `
           <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
             <p style="color: #15803d; font-weight: 600; margin: 0 0 8px;">Please review and approve this quotation</p>

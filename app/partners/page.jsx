@@ -42,6 +42,13 @@ const s = {
   secTitle: { fontSize: 11, fontWeight: 700, color: '#8b91ab', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12, marginTop: 4 },
 }
 
+const F = ({ label, children }) => (
+  <div style={{ marginBottom: 14 }}>
+    <label style={s.lbl}>{label}</label>
+    {children}
+  </div>
+)
+
 export default function PartnersPage() {
   const { data: session } = useSession()
   const isAdmin = session?.isAdmin
@@ -135,13 +142,6 @@ export default function PartnersPage() {
 
   const activeCount   = partners.filter(p => p.status !== 'inactive').length
   const inactiveCount = partners.filter(p => p.status === 'inactive').length
-
-  const F = ({ label, children }) => (
-    <div style={{ marginBottom: 14 }}>
-      <label style={s.lbl}>{label}</label>
-      {children}
-    </div>
-  )
 
   return (
     <div style={s.page}>

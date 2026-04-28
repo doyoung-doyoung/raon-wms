@@ -170,17 +170,18 @@ export async function POST(request) {
         const warningNumber = prevCount + 1
         const today = new Date().toISOString().slice(0, 10)
 
+        const empName = employee.name_ko || employee.name_th || employee.name_en || employee.email
         const newWarning = {
           id: generateId(),
           employee_id: employee.email,
-          employee_name: employee.name,
+          employee_name: empName,
           employee_email: employee.email,
           position: employee.position || '',
           start_date: absenceDays[absenceDays.length - 1],
           address: employee.address || '',
           warning_number: warningNumber,
-          reason1: `무단결근 3일 이상 (${absenceDays.join(', ')})`,
-          reason2: '병가 미신청',
+          reason1: `ขาดงานโดยไม่มีเหตุผล 3 วันขึ้นไป (${absenceDays.join(', ')})`,
+          reason2: 'ไม่แจ้งลาป่วย',
           reason3: '',
           issued_at: today,
           director_name: session.user.name,
@@ -192,17 +193,50 @@ export async function POST(request) {
 
         await appendRow(SHEET_ID, 'Sheet1', newWarning)
 
+        const autoNow = new Date()
+        const autoThaiYear = autoNow.getFullYear() + 543
+        const autoThaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม']
+        const autoEnMonths = ['January','February','March','April','May','June','July','August','September','October','November','December']
+        const autoIssueDateTh = `วันที่ ${autoNow.getDate()} ${autoThaiMonths[autoNow.getMonth()]} พ.ศ. ${autoThaiYear}`
+        const autoIssueDateEn = `${autoNow.getDate()} ${autoEnMonths[autoNow.getMonth()]} ${autoNow.getFullYear()}`
+        const autoDirName = process.env.ADMIN_NAME || 'Doyoung Jung'
+
+        let autoPdfBuffer = null
+        let autoFileName = null
+        try {
+          autoPdfBuffer = await generateWarningLetter({
+            issueDate: autoIssueDateTh,
+            issueDateEn: autoIssueDateEn,
+            employeeName: empName,
+            employeeNameEn: employee.name_en || '',
+            position: employee.position || '',
+            startDate: employee.start_date || today,
+            address: employee.address || '',
+            warningNumber,
+            reason1: newWarning.reason1,
+            reason2: newWarning.reason2,
+            reason3: '',
+            directorName: autoDirName,
+            directorRole: 'กรรมการบริษัท (Managing Director)',
+          })
+          autoFileName = `warning_${warningNumber}_${empName}_${today}.pdf`
+        } catch (pdfErr) {
+          console.error('자동감지 경고장 PDF 생성 실패:', pdfErr)
+        }
+
         try {
           await sendWarningEmail({
             to: employee.email,
-            employeeName: employee.name,
+            employeeName: empName,
             position: employee.position || '',
             warningNumber,
             reason1: newWarning.reason1,
             reason2: newWarning.reason2,
             reason3: '',
-            directorName: session.user.name,
+            directorName: autoDirName,
             issuedAt: today,
+            pdfBuffer: autoPdfBuffer,
+            fileName: autoFileName,
           })
         } catch (emailError) {
           console.error('경고장 이메일 발송 실패:', emailError)

@@ -52,7 +52,13 @@ export default function PayrollPage() {
       const empData = await empRes.json()
       const payData = await payRes.json()
       setEmployees(Array.isArray(empData) ? empData.filter(e => e.status !== 'inactive') : [])
-      setPayrolls(Array.isArray(payData) ? payData.filter(p => p.status !== 'deleted') : [])
+      const rawPayrolls = Array.isArray(payData) ? payData.filter(p => p.status !== 'deleted') : []
+      const seen = new Map()
+      rawPayrolls.forEach(p => {
+        const key = p.employee_id || p.employee_email
+        if (!seen.has(key) || (p.id > seen.get(key).id)) seen.set(key, p)
+      })
+      setPayrolls([...seen.values()])
     } catch { /* ignore */ }
     setLoading(false)
   }, [session, yearMonth])
@@ -91,7 +97,7 @@ export default function PayrollPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            employee_id:    modal.employee.id || modal.employee.email,
+            employee_id:    modal.employee.email,
             employee_email: modal.employee.email,
             employee_name:  modal.employee.name_th || modal.employee.name_ko || modal.employee.name_en,
             year_month:     yearMonth,

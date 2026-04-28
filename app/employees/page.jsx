@@ -17,7 +17,7 @@ export default function EmployeesPage() {
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState({
     name_ko: '', name_th: '', name_en: '',
-    email: '', phone: '', address: '',
+    email: '', phone: '', address: '', custom_1: '',
     position: '', department: '',
     start_date: '', salary: '',
     bank_account: '', bank_name: '',
@@ -61,7 +61,7 @@ export default function EmployeesPage() {
         setShowForm(false)
         setForm({
           name_ko: '', name_th: '', name_en: '',
-          email: '', phone: '', address: '',
+          email: '', phone: '', address: '', custom_1: '',
           position: '', department: '',
           start_date: '', salary: '',
           bank_account: '', bank_name: '',
@@ -94,7 +94,8 @@ export default function EmployeesPage() {
     { key: 'bank_name', label: '은행명', placeholder: 'KASIKORN BANK' },
     { key: 'bank_account', label: '계좌번호', placeholder: '174-2-88990-0' },
     { key: 'emergency_contact', label: '비상연락처', placeholder: '이름 / 전화번호' },
-    { key: 'address', label: '주소', placeholder: '태국 주소...' },
+    { key: 'custom_1', label: '주소 (ID카드)', placeholder: '신분증상 주소...' },
+    { key: 'address', label: '주소 (현재 거주지)', placeholder: '현재 거주 주소...' },
   ]
 
   if (status === 'loading') return null

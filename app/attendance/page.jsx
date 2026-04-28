@@ -81,8 +81,8 @@ export default function AttendancePage() {
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>출퇴근 관리</h1>
-          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>총 {records.length}건</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>บันทึกเวลา</h1>
+          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>ทั้งหมด {records.length} รายการ</p>
         </div>
         <input
           type="date"

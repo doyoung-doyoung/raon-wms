@@ -50,7 +50,7 @@ export async function POST(request) {
       bank_name:          body.bank_name || '',
       national_id:        body.national_id || '',
       emergency_contact:  body.emergency_contact || '',
-      custom_1: '', custom_2: '', custom_3: '', custom_4: '', custom_5: '',
+      custom_1: body.custom_1 || '', custom_2: '', custom_3: '', custom_4: '', custom_5: '',
       custom_6: '', custom_7: '', custom_8: '', custom_9: '', custom_10: '',
     }
 

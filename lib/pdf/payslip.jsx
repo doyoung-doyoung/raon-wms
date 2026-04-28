@@ -172,72 +172,70 @@ export default function PayslipPDF({ data }) {
         <Watermark />
         <DocHeader />
 
-        <Text style={styles.titleTh}>สลิปเงินเดือน</Text>
+        <Text style={styles.titleTh}>{'สลิปเงินเดือน '}</Text>
         <Text style={styles.titleEn}>Payslip</Text>
-        <Text style={styles.periodBar}>
-          วันที่จ่าย / Pay date: {payDateTh}
-        </Text>
+        <Text style={styles.periodBar}>{'วันที่จ่าย / Pay date: ' + (payDateTh || '') + ' '}</Text>
 
         <View style={styles.empBox}>
           <View style={styles.empRow}>
-            <Text style={styles.empLabel}>ชื่อ / Name</Text>
-            <Text style={styles.empVal}>{nameTh} ({nameEn})</Text>
+            <Text style={styles.empLabel}>{'ชื่อ / Name '}</Text>
+            <Text style={styles.empVal}>{(nameTh || '') + ' (' + (nameEn || '') + ') '}</Text>
           </View>
           <View style={styles.empRow}>
-            <Text style={styles.empLabel}>รหัส / Employee ID</Text>
-            <Text style={styles.empVal}>{employeeId}</Text>
+            <Text style={styles.empLabel}>{'รหัส / Employee ID '}</Text>
+            <Text style={styles.empVal}>{(employeeId || '') + ' '}</Text>
           </View>
           <View style={styles.empRow}>
-            <Text style={styles.empLabel}>ตำแหน่ง / Position</Text>
-            <Text style={styles.empVal}>{position}</Text>
+            <Text style={styles.empLabel}>{'ตำแหน่ง / Position '}</Text>
+            <Text style={styles.empVal}>{(position || '') + ' '}</Text>
           </View>
           <View style={styles.empRow}>
-            <Text style={styles.empLabel}>วันที่เริ่มงาน / Start date</Text>
-            <Text style={styles.empVal}>{startDateTh}</Text>
+            <Text style={styles.empLabel}>{'วันที่เริ่มงาน / Start date '}</Text>
+            <Text style={styles.empVal}>{(startDateTh || '') + ' '}</Text>
           </View>
         </View>
 
         <View style={styles.payGrid}>
           <View style={styles.paySection}>
-            <Text style={styles.payHead}>รายได้ / Income</Text>
-            <View style={styles.payRow}><Text style={styles.payLabel}>เงินเดือน / Base salary</Text><Text style={styles.payVal}>{baseSalary.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ค่าที่พัก / Housing</Text><Text style={styles.payVal}>{housing.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ค่าเดินทาง / Transport</Text><Text style={styles.payVal}>{transport.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ค่าอาหาร / Meal</Text><Text style={styles.payVal}>{meal.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ค่าล่วงเวลา / OT</Text><Text style={styles.payVal}>{ot.toLocaleString()}</Text></View>
-            {otherIncome > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>อื่นๆ / Other</Text><Text style={styles.payVal}>{otherIncome.toLocaleString()}</Text></View>}
-            {expenseReimbursement > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>ค่าใช้จ่าย / Expense</Text><Text style={styles.payVal}>{expenseReimbursement.toLocaleString()}</Text></View>}
+            <Text style={styles.payHead}>{'รายได้ / Income '}</Text>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'เงินเดือน / Base salary '}</Text><Text style={styles.payVal}>{baseSalary.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ค่าที่พัก / Housing '}</Text><Text style={styles.payVal}>{housing.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ค่าเดินทาง / Transport '}</Text><Text style={styles.payVal}>{transport.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ค่าอาหาร / Meal '}</Text><Text style={styles.payVal}>{meal.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ค่าล่วงเวลา / OT '}</Text><Text style={styles.payVal}>{ot.toLocaleString()}</Text></View>
+            {otherIncome > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>{'อื่นๆ / Other '}</Text><Text style={styles.payVal}>{otherIncome.toLocaleString()}</Text></View>}
+            {expenseReimbursement > 0 && <View style={styles.payRow}><Text style={styles.payLabel}>{'ค่าใช้จ่าย / Expense '}</Text><Text style={styles.payVal}>{expenseReimbursement.toLocaleString()}</Text></View>}
             <View style={styles.paySubtotal}>
-              <Text>รวม / Total</Text>
+              <Text>{'รวม / Total '}</Text>
               <Text style={styles.incomeTotal}>{totalIncome.toLocaleString()}</Text>
             </View>
           </View>
 
           <View style={styles.paySection}>
-            <Text style={styles.payHead}>รายหัก / Deductions</Text>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ภาษี / Income tax</Text><Text style={styles.payVal}>{tax.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>ประกันสังคม / Social sec.</Text><Text style={styles.payVal}>{socialSecurity.toLocaleString()}</Text></View>
-            <View style={styles.payRow}><Text style={styles.payLabel}>หักอื่นๆ / Other</Text><Text style={styles.payVal}>{otherDeduction.toLocaleString()}</Text></View>
+            <Text style={styles.payHead}>{'รายหัก / Deductions '}</Text>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ภาษี / Income tax '}</Text><Text style={styles.payVal}>{tax.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'ประกันสังคม / Social sec. '}</Text><Text style={styles.payVal}>{socialSecurity.toLocaleString()}</Text></View>
+            <View style={styles.payRow}><Text style={styles.payLabel}>{'หักอื่นๆ / Other '}</Text><Text style={styles.payVal}>{otherDeduction.toLocaleString()}</Text></View>
             <View style={styles.paySubtotal}>
-              <Text>รวมหัก / Total</Text>
+              <Text>{'รวมหัก / Total '}</Text>
               <Text style={styles.deductTotal}>{totalDeduction.toLocaleString()}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.netBox}>
-          <Text style={styles.netLabelTh}>ยอดสุทธิที่ได้รับ</Text>
+          <Text style={styles.netLabelTh}>{'ยอดสุทธิที่ได้รับ '}</Text>
           <Text style={styles.netLabelEn}>Net Pay</Text>
-          <Text style={styles.netAmount}>฿ {netPay.toLocaleString()}</Text>
+          <Text style={styles.netAmount}>{'฿ ' + netPay.toLocaleString()}</Text>
           <Text style={styles.netWords}>{numToThaiWords(netPay)}</Text>
         </View>
 
         <View style={styles.sigArea}>
-          <Text style={styles.sigLabel}>ผู้อนุมัติ / Approved by</Text>
+          <Text style={styles.sigLabel}>{'ผู้อนุมัติ / Approved by '}</Text>
           <Image style={styles.sigImage} src={sigPath} />
           <View style={styles.sigLine} />
-          <Text style={styles.sigName}>{directorName}</Text>
-          <Text style={styles.sigRole}>{directorRole}</Text>
+          <Text style={styles.sigName}>{(directorName || '') + ' '}</Text>
+          <Text style={styles.sigRole}>{(directorRole || '') + ' '}</Text>
         </View>
       </Page>
     </Document>

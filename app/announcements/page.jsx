@@ -39,7 +39,7 @@ export default function AnnouncementsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        setSaveMsg(`공지 등록 완료! 직원 ${data.emailsSent}명에게 이메일 발송됨`)
+        setSaveMsg(`ลงทะเบียนเรียบร้อย! ส่งอีเมลไปยังพนักงาน ${data.emailsSent} คน`)
         setForm({ title: '', content: '', pinned: false })
         setShowForm(false)
         await fetchAnnouncements()
@@ -77,15 +77,15 @@ export default function AnnouncementsPage() {
     <div style={s.page}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>공지사항</h1>
-          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{announcements.length}개</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>ประกาศ</h1>
+          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{announcements.length} รายการ</p>
         </div>
         {isAdmin && (
           <button
             onClick={() => { setShowForm(true); setSelected(null) }}
             style={{ padding: '9px 20px', background: '#4f62f7', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            + 공지 작성
+            + เขียนประกาศ
           </button>
         )}
       </div>
@@ -99,7 +99,7 @@ export default function AnnouncementsPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#8b91ab' }}>
           <div style={{ width: 32, height: 32, border: '2px solid rgba(79,98,247,0.3)', borderTop: '2px solid #4f62f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          불러오는 중...
+          กำลังโหลด...
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1.5fr' : '1fr', gap: 20 }}>
@@ -108,7 +108,7 @@ export default function AnnouncementsPage() {
           <div>
             {sorted.length === 0 ? (
               <div style={{ ...s.card, textAlign: 'center', padding: '48px 24px', color: '#8b91ab', fontSize: 14 }}>
-                등록된 공지사항이 없습니다.
+                ไม่มีประกาศ
               </div>
             ) : sorted.map(item => (
               <div
@@ -122,7 +122,7 @@ export default function AnnouncementsPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                       {item.pinned === 'true' && (
-                        <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '2px 7px', borderRadius: 5, fontWeight: 600 }}>고정</span>
+                        <span style={{ fontSize: 10, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '2px 7px', borderRadius: 5, fontWeight: 600 }}>ปักหมุด</span>
                       )}
                       <span style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.title}
@@ -172,26 +172,26 @@ export default function AnnouncementsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: '#1e2235', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 20, padding: '32px', width: '100%', maxWidth: 560 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>공지사항 작성</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>เขียนประกาศ</h2>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 20 }}>x</button>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={s.label}>제목 *</label>
+              <label style={s.label}>หัวข้อ *</label>
               <input
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                placeholder="공지 제목을 입력하세요"
+                placeholder="กรุณากรอกหัวข้อประกาศ"
                 style={s.input}
               />
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={s.label}>내용 *</label>
+              <label style={s.label}>เนื้อหา *</label>
               <textarea
                 value={form.content}
                 onChange={e => setForm(p => ({ ...p, content: e.target.value }))}
-                placeholder="공지 내용을 입력하세요"
+                placeholder="กรุณากรอกเนื้อหาประกาศ"
                 rows={7}
                 style={{ ...s.input, resize: 'vertical', lineHeight: 1.7 }}
               />
@@ -205,23 +205,23 @@ export default function AnnouncementsPage() {
                 onChange={e => setForm(p => ({ ...p, pinned: e.target.checked }))}
                 style={{ width: 16, height: 16, cursor: 'pointer' }}
               />
-              <label htmlFor="pinned" style={{ fontSize: 13, color: '#c4c7d6', cursor: 'pointer' }}>상단 고정</label>
+              <label htmlFor="pinned" style={{ fontSize: 13, color: '#c4c7d6', cursor: 'pointer' }}>ปักหมุดด้านบน</label>
             </div>
 
             <div style={{ background: 'rgba(79,98,247,0.08)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 10, padding: '12px 14px', marginBottom: 20, fontSize: 12, color: '#818cf8' }}>
-              등록 즉시 전체 직원 이메일로 공지 PDF가 자동 발송됩니다.
+              เมื่อลงทะเบียน จะส่ง PDF ประกาศไปยังพนักงานทุกคนทันที
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '9px 20px', background: 'rgba(255,255,255,0.05)', color: '#8b91ab', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                취소
+                ยกเลิก
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving || !form.title || !form.content}
                 style={{ padding: '9px 24px', background: !form.title || !form.content ? 'rgba(79,98,247,0.4)' : '#4f62f7', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: !form.title || !form.content ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
               >
-                {saving ? '등록 중...' : '등록 및 발송'}
+                {saving ? 'กำลังส่ง...' : 'ลงทะเบียนและส่ง'}
               </button>
             </div>
           </div>

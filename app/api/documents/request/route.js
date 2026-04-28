@@ -18,7 +18,8 @@ export async function GET(request) {
     const rows = await readSheet(SHEET_ID, SHEET_NAME)
 
     let filtered = rows
-    if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId)
+    if (!session.isAdmin) filtered = filtered.filter(r => r.employeeId === employeeId)
+    else if (employeeId) filtered = filtered.filter(r => r.employeeId === employeeId)
     if (status) filtered = filtered.filter(r => r.status === status)
 
     return NextResponse.json({ success: true, requests: filtered })

@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from '@react-pdf/renderer'
 export const COMPANY_HEADER = {
   name: process.env.COMPANY_NAME_TH || ' บริษัท ราอน(ไทยแลนด์) จำกัด ',
   addr1: process.env.COMPANY_ADDR_TH1 || '349 อาคารเอสเจ อินฟินิท วัน บิสซิเนส คอมเพล็กซ์ ชั้นที่ 29 ห้องเลขที่ 2901-2907',
-  addr2: process.env.COMPANY_ADDR_TH2 || 'ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร',
+  addr2: process.env.COMPANY_ADDR_TH2 || 'ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร ',
   addr3: `โทร ${process.env.COMPANY_PHONE || '062-124-7979'} | ${process.env.COMPANY_EMAIL || 'raonthailand23@gmail.com'}`,
 }
 
@@ -80,5 +80,5 @@ export function numToThaiWords(n) {
     return convert(Math.floor(n/1000000)) + 'ล้าน' + convert(n % 1000000)
   }
   
-  return convert(num) + 'บาทถ้วน'
+  return convert(num) + 'บาทถ้วน '
 }

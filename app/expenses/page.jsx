@@ -53,6 +53,8 @@ export default function ExpensesPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [rejectModal, setRejectModal]   = useState(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [page, setPage]         = useState(1)
+  const PAGE_SIZE = 5
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true)
@@ -120,10 +122,15 @@ export default function ExpensesPage() {
 
   const getCat = (val) => CATEGORIES.find(c => c.value === val) || CATEGORIES[5]
 
-  const myExpenses      = isAdmin ? expenses : expenses.filter(e => e.employee_email === session?.user?.email)
-  const pendingList     = expenses.filter(e => e.status === 'pending')
-  const displayedList   = (filterStatus === 'all' ? myExpenses : myExpenses.filter(e => e.status === filterStatus))
-  const totalApproved   = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + Number(e.amount || 0), 0)
+  const cutoff60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const myExpenses = isAdmin ? expenses : expenses.filter(e => e.employee_email === session?.user?.email)
+  const pendingList = expenses.filter(e => e.status === 'pending')
+  const filteredBase = (filterStatus === 'all' ? myExpenses : myExpenses.filter(e => e.status === filterStatus))
+    .filter(e => isAdmin || (e.status === 'pending') || (e.submitted_at || '') >= cutoff60)
+    .sort((a, b) => (b.submitted_at || '').localeCompare(a.submitted_at || ''))
+  const totalPages    = Math.max(1, Math.ceil(filteredBase.length / PAGE_SIZE))
+  const displayedList = filteredBase.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalApproved = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + Number(e.amount || 0), 0)
 
   const pendingCount = pendingList.length
   const TABS = [
@@ -169,17 +176,30 @@ export default function ExpensesPage() {
         <div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {['all','pending','approved','rejected'].map(f => (
-              <button key={f} onClick={() => setFilterStatus(f)}
+              <button key={f} onClick={() => { setFilterStatus(f); setPage(1) }}
                 style={{ ...s.tab(filterStatus === f), padding: '5px 14px', fontSize: 12 }}>
-                {{ all:'전체', pending:'검토중', approved:'승인됨', rejected:'반려됨' }[f]}
+                {{ all:'ทั้งหมด', pending:'รอตรวจสอบ', approved:'อนุมัติ', rejected:'ไม่อนุมัติ' }[f]}
               </button>
             ))}
           </div>
-          {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>불러오는 중...</div>}
+          {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>กำลังโหลด...</div>}
           {!loading && displayedList.length === 0 && (
-            <div style={{ ...s.card, textAlign: 'center', padding: 40, color: '#8b91ab' }}>신청 내역이 없습니다</div>
+            <div style={{ ...s.card, textAlign: 'center', padding: 40, color: '#8b91ab' }}>ไม่มีรายการ</div>
           )}
           {!loading && displayedList.map((exp, i) => <ExpenseCard key={exp.id || i} exp={exp} isAdmin={false} getCat={getCat} />)}
+          {!loading && totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 16 }}>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: page === 1 ? '#555' : '#8b91ab', cursor: page === 1 ? 'not-allowed' : 'pointer', fontSize: 12 }}>
+                ก่อนหน้า
+              </button>
+              <span style={{ fontSize: 12, color: '#8b91ab' }}>{page} / {totalPages}</span>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: page === totalPages ? '#555' : '#8b91ab', cursor: page === totalPages ? 'not-allowed' : 'pointer', fontSize: 12 }}>
+                ถัดไป
+              </button>
+            </div>
+          )}
         </div>
       )}
 

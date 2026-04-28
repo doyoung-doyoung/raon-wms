@@ -49,6 +49,42 @@ export default function ReportsPage() {
     }
   }
 
+  const handleDownloadCSV = () => {
+    if (!report) return
+    const rows = [
+      ['기간', report.period || ''],
+      ['생성일', report.generatedAt || ''],
+      [],
+      ['=== 직원 현황 ==='],
+      ['전체 직원', report.employees?.total || 0],
+      ['재직 중', report.employees?.active || 0],
+      ['수습 중', report.employees?.onProbation || 0],
+      ['신규 입사', report.employees?.newHires || 0],
+      [],
+      ['=== 출퇴근 현황 ==='],
+      ['총 출근 기록', report.attendance?.totalWorkDays || 0],
+      ['평균 출근율 (%)', report.attendance?.avgAttendanceRate || 0],
+      ['지각 횟수', report.attendance?.lateCount || 0],
+      ['미출근 기록', report.attendance?.absentCount || 0],
+      [],
+      ['=== 직원별 휴가 현황 ==='],
+      ['직원', '직책', '연차 사용', '연차 잔여', '병가', '경조사', '합계'],
+      ...(report.leaves?.byEmployee || []).map(e => [e.name, e.position || '-', e.annual, e.annualRemaining, e.sick, e.personal, e.total]),
+      [],
+      ['=== 경비 현황 ==='],
+      ['승인된 총 경비 (THB)', report.expenses?.totalApproved || 0],
+      ['건수', report.expenses?.count || 0],
+    ]
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `report_${report.period || 'export'}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleSendEmail = async () => {
     setSendingEmail(true)
     try {
@@ -135,6 +171,18 @@ export default function ReportsPage() {
               ))}
             </select>
           )}
+
+          {/* CSV 다운로드 버튼 */}
+          <button onClick={handleDownloadCSV} disabled={!report || loading} style={{
+            padding: '8px 18px',
+            background: 'rgba(34,197,94,0.1)',
+            color: '#4ade80',
+            border: '1px solid rgba(34,197,94,0.25)',
+            borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: (!report || loading) ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            📥 엑셀 다운로드
+          </button>
 
           {/* 이메일 발송 버튼 */}
           <button onClick={handleSendEmail} disabled={sendingEmail || loading} style={{
