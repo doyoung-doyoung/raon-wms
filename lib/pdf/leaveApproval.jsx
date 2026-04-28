@@ -133,7 +133,7 @@ export default function LeaveApprovalPDF({ data }) {
           </View>
           {!!reason && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{'เหตุผล / Reason\u00A0'}</Text>
+              <Text style={styles.detailLabel}>{'เหตุผล\u00A0'}</Text>
               <Text style={[styles.detailValue, { flex: 1 }]}>{reason + '\u00A0'}</Text>
             </View>
           )}

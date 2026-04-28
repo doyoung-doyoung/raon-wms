@@ -2,6 +2,7 @@ import { createHmac } from 'crypto'
 import { readSheet, updateRow } from '../../../../lib/google/sheets'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const SHEET_ID   = process.env.SHEETS_QUOTATIONS_ID
 const SHEET_NAME = 'Sheet1'

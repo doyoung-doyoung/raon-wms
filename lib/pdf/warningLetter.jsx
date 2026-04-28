@@ -50,11 +50,11 @@ export default function WarningLetterPDF({ data }) {
 
         <View style={styles.row}>
           <Text style={styles.rowLabel}>{'เรียน / To'}</Text>
-          <Text style={styles.rowValue}>{displayName}</Text>
+          <Text style={styles.rowValue}>{displayName + '\u00A0'}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>{'ตำแหน่ง / Position'}</Text>
-          <Text style={styles.rowValue}>{position || ''}</Text>
+          <Text style={styles.rowValue}>{(position || '') + '\u00A0'}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.rowLabel}>{'วันเริ่มงาน / Start Date'}</Text>
@@ -63,7 +63,7 @@ export default function WarningLetterPDF({ data }) {
         {!!address && (
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{'ที่อยู่ / Address'}</Text>
-            <Text style={styles.rowValue}>{address}</Text>
+            <Text style={styles.rowValue}>{address + '\u00A0'}</Text>
           </View>
         )}
 
@@ -96,13 +96,12 @@ export default function WarningLetterPDF({ data }) {
 
         <Text style={styles.bodyText}>{'บริษัทขอให้ท่านปรับปรุงพฤติกรรมดังกล่าวโดยเร็ว หากท่านยังคงกระทำการในลักษณะดังกล่าวซ้ำอีก\u00A0'}</Text>
         <Text style={styles.bodyText}>{'ขอสงวนสิทธิ์ในการดำเนินการตามระเบียบและข้อบังคับของบริษัทอย่างเคร่งครัดต่อไป\u00A0'}</Text>
-        <Text style={styles.bodyText}>{'หนังสือเตือนฉบับนี้ถือเป็นส่วนหนึ่งของบันทึกการจ้างงานของท่าน \u00A0'}</Text>
 
         <View style={styles.sigArea}>
           <Text style={styles.sigLabel}>{'กรรมการบริษัท / Authorized Signatory'}</Text>
           <Image style={styles.sigImage} src={sigPath} />
           <View style={styles.sigLine} />
-          <Text style={styles.sigName}>{directorName || ''}</Text>
+          <Text style={styles.sigName}>{(directorName || '') + '\u00A0'}</Text>
           <Text style={styles.sigRole}>{directorRole || 'กรรมการบริษัท (Managing Director)'}</Text>
         </View>
       </Page>
