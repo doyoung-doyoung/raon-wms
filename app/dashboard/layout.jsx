@@ -9,12 +9,14 @@ import LangSwitcher from '../../components/ui/LangSwitcher'
 
 // settings key → nav href 매핑
 const NAV_VISIBILITY_MAP = {
-  announcements: '/announcements',
-  attendance:    '/attendance',
-  leaves:        '/leaves',
-  expenses:      '/expenses',
-  documents:     '/documents/my-documents',
-  warnings:      '/warnings',
+  announcements:   '/announcements',
+  attendance:      '/attendance',
+  leaves:          '/leaves',
+  expenses:        '/expenses',
+  documentRequest: '/documents/request',
+  warnings:        '/warnings',
+  quotations:      '/quotations',
+  clients:         '/clients',
 }
 
 export default function DashboardLayout({ children }) {
@@ -73,8 +75,6 @@ export default function DashboardLayout({ children }) {
     {
       group: 'documents',
       items: [
-        { href: '/documents', icon: '📄', labelKey: 'nav.documents', adminOnly: true },
-        { href: '/documents/my-documents', icon: '🗂️', labelKey: 'nav.myDocuments' },
         { href: '/documents/request', icon: '📝', labelKey: 'nav.documentRequest' },
         { href: '/documents/approve', icon: '✅', labelKey: 'nav.documentApprove', adminOnly: true },
         { href: '/warnings', icon: '⚠️', labelKey: 'nav.warnings' },
@@ -86,7 +86,6 @@ export default function DashboardLayout({ children }) {
       items: [
         { href: '/quotations', icon: '📋', labelKey: 'nav.quotations' },
         { href: '/clients',    icon: '👥', labelKey: 'nav.clients' },
-        { href: '/partners', icon: '🤝', labelKey: 'nav.partners', adminOnly: true },
       ]
     },
     {

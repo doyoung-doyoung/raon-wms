@@ -73,22 +73,26 @@ async function checkAbsences() {
   const employees = await readSheet(process.env.SHEETS_EMPLOYEES_ID)
   const warnings = await readSheet(SHEET_ID)
 
+  const systemStartDate = new Date('2026-03-28')
+
   for (const employee of employees) {
     const email = employee.email
     if (!email) continue
+    // 재직 중인 직원만 체크 (퇴직/해고 등 제외)
+    if (employee.status !== 'active' && employee.status !== 'probation') continue
 
     // 최근 5 영업일 체크
     let absenceDays = []
     let checkDate = new Date(today)
 
-    // 출퇴근 시스템 시작일 (오늘 이전 데이터는 무시)
-const systemStartDate = new Date('2026-03-28')
+    // 입사일과 시스템 시작일 중 더 늦은 날짜를 기준으로
+    const empStart = employee.start_date ? new Date(employee.start_date) : systemStartDate
+    const effectiveStart = empStart > systemStartDate ? empStart : systemStartDate
 
 for (let i = 0; i < 5; i++) {
   checkDate.setDate(checkDate.getDate() - 1)
-  
-  // 시스템 시작일 이전은 체크 안함
-  if (checkDate < systemStartDate) break
+
+  if (checkDate < effectiveStart) break
 
       // 주말 건너뛰기
       if (checkDate.getDay() === 0 || checkDate.getDay() === 6) {
@@ -338,12 +342,46 @@ export async function PATCH(request) {
     if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await request.json()
-    const today = new Date().toISOString().slice(0, 10)
+    const now = new Date()
+    const acknowledgedAt = now.toISOString()
+
+    // 경고장 정보 조회
+    const warnings = await readSheet(SHEET_ID)
+    const warning = warnings.find(w => w.id === id)
 
     await updateRow(SHEET_ID, 'Sheet1', id, {
       status: 'acknowledged',
-      acknowledged_at: today,
+      acknowledged_at: acknowledgedAt,
     })
+
+    // 직원에게 확인 완료 이메일 발송
+    if (warning?.employee_email) {
+      try {
+        await transporter.sendMail({
+          from: `"RAON WMS" <${process.env.GMAIL_USER}>`,
+          to: warning.employee_email,
+          subject: `[RAON] หนังสือเตือน - ยืนยันการรับทราบ / 경고장 확인 완료`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 24px; border-radius: 12px;">
+              <div style="background: #22c55e; border-radius: 12px; padding: 24px; color: white;">
+                <h2 style="margin: 0; font-size: 18px;">✓ ยืนยันการรับทราบหนังสือเตือน</h2>
+                <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">경고장 확인 완료</p>
+              </div>
+              <div style="background: white; border-radius: 12px; padding: 24px; margin-top: 12px;">
+                <p style="color: #374151;">เรียน คุณ <strong>${warning.employee_name || ''}</strong>,</p>
+                <p style="color: #475569;">ท่านได้ยืนยันการรับทราบหนังสือเตือนฉบับนี้เรียบร้อยแล้ว</p>
+                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin: 16px 0; font-size: 13px; color: #166534;">
+                  <strong>วันที่ยืนยัน / 확인 일시:</strong> ${acknowledgedAt.slice(0, 19).replace('T', ' ')}
+                </div>
+                <p style="font-size: 13px; color: #6b7280;">RAON (Thailand) Co., Ltd.</p>
+              </div>
+            </div>
+          `,
+        })
+      } catch (emailErr) {
+        console.error('경고장 확인 완료 이메일 발송 실패:', emailErr)
+      }
+    }
 
     return Response.json({ success: true })
   } catch (error) {

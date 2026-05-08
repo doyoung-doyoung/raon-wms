@@ -18,7 +18,7 @@ export async function POST(request) {
     if (!session?.isAdmin) return NextResponse.json({ success: false, error: 'Admin only' }, { status: 403 })
 
     const body = await request.json()
-    const { requestId, approved, directorId } = body
+    const { requestId, approved, directorId, rejectedReason } = body
 
     const requests = await readSheet(SHEET_ID, SHEET_NAME)
     const req = requests.find(r => r.id === requestId)
@@ -30,6 +30,7 @@ export async function POST(request) {
         status: 'rejected',
         approvedAt: new Date().toISOString(),
         approvedBy: directorId,
+        rejectedReason: rejectedReason || '',
       })
       return NextResponse.json({ success: true, status: 'rejected' })
     }

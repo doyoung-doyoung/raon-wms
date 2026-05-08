@@ -116,7 +116,22 @@ export default function AnnouncementsPage() {
             ) : sorted.map(item => (
               <div
                 key={item.id}
-                onClick={() => setSelected(selected?.id === item.id ? null : item)}
+                onClick={async () => {
+                  if (selected?.id === item.id) {
+                    setSelected(null)
+                  } else {
+                    // 최신 confirmed_by 데이터를 위해 목록 새로고침
+                    const res = await fetch('/api/announcements')
+                    const data = await res.json()
+                    if (Array.isArray(data)) {
+                      setAnnouncements(data)
+                      const fresh = data.find(a => a.id === item.id)
+                      setSelected(fresh || item)
+                    } else {
+                      setSelected(item)
+                    }
+                  }
+                }}
                 style={selected?.id === item.id ? s.activeCard : s.card}
                 onMouseEnter={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)' }}
                 onMouseLeave={e => { if (selected?.id !== item.id) e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}

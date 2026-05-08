@@ -20,11 +20,19 @@ export async function GET(request) {
     if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
-    const date = searchParams.get('date') || new Date().toISOString().slice(0, 10)
+    const date = searchParams.get('date')
+    const month = searchParams.get('month') // YYYY-MM
     const email = searchParams.get('email')
 
     const records = await readSheet(SHEET_ID)
-    let filtered = records.filter(r => r.date === date)
+    let filtered
+
+    if (month) {
+      filtered = records.filter(r => r.date && r.date.startsWith(month))
+    } else {
+      const targetDate = date || new Date().toISOString().slice(0, 10)
+      filtered = records.filter(r => r.date === targetDate)
+    }
 
     if (!session.isAdmin) filtered = filtered.filter(r => r.employee_id === session.user.email)
     if (email && session.isAdmin) filtered = filtered.filter(r => r.employee_id === email)

@@ -48,12 +48,14 @@ const DEFAULT_HOLIDAYS = {
 }
 
 const DEFAULT_MENU_SETTINGS = {
-  announcements: { label: '📢 공지사항', visible: true },
-  attendance:    { label: '⏰ 출퇴근', visible: true },
-  leaves:        { label: '🗓️ 휴가/병가', visible: true },
-  expenses:      { label: '💰 경비 청구', visible: true },
-  documents:     { label: '📄 내 서류함', visible: true },
-  warnings:      { label: '⚠️ 경고장', visible: false },
+  announcements:   { label: '📢 ประกาศ', visible: true },
+  attendance:      { label: '⏰ เข้า-ออกงาน', visible: true },
+  leaves:          { label: '🗓️ ลางาน', visible: true },
+  expenses:        { label: '💰 ค่าใช้จ่าย', visible: true },
+  documentRequest: { label: '📝 ขอเอกสาร', visible: true },
+  warnings:        { label: '⚠️ หนังสือเตือน', visible: false },
+  quotations:      { label: '📋 ใบเสนอราคา', visible: true },
+  clients:         { label: '👥 ลูกค้า', visible: true },
 }
 
 export default function SettingsPage() {
@@ -265,7 +267,7 @@ export default function SettingsPage() {
       {activeTab === 'menu' && (
         <div>
           <div style={{ background: 'rgba(79,98,247,0.06)', border: '1px solid rgba(79,98,247,0.2)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#818cf8' }}>
-            💡 직원에게 보이는 메뉴를 숨기거나 비활성화할 수 있습니다. 관리자에게는 항상 표시됩니다.
+            💡 สามารถซ่อนหรือแสดงเมนูสำหรับพนักงานได้ ผู้จัดการจะเห็นเมนูทั้งหมดเสมอ
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
             {Object.entries(menuSettings).map(([key, setting]) => (
@@ -274,16 +276,16 @@ export default function SettingsPage() {
                   <span style={{ fontSize: 16 }}>{setting.label.split(' ')[0]}</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f3f9' }}>{setting.label.split(' ').slice(1).join(' ')}</div>
-                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>직원 메뉴에 표시</div>
+                    <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>แสดงในเมนูพนักงาน</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: '#8b91ab' }}>표시</span>
+                  <span style={{ fontSize: 12, color: '#8b91ab' }}>แสดง</span>
                   <div onClick={() => toggleMenu(key, 'visible')} style={{ width: 40, height: 22, borderRadius: 11, cursor: 'pointer', background: setting.visible ? '#4f62f7' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'all 0.2s' }}>
                     <div style={{ position: 'absolute', top: 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'all 0.2s', left: setting.visible ? 21 : 3 }} />
                   </div>
                   <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 6, fontWeight: 600, background: setting.visible ? 'rgba(34,197,94,0.1)' : 'rgba(139,145,171,0.1)', color: setting.visible ? '#4ade80' : '#8b91ab' }}>
-                    {setting.visible ? '표시 중' : '숨김'}
+                    {setting.visible ? 'แสดงอยู่' : 'ซ่อน'}
                   </span>
                 </div>
               </div>

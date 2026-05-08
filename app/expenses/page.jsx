@@ -5,19 +5,19 @@ import { useSession } from 'next-auth/react'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = [
-  { value: 'transport',     label: '교통비',  icon: '🚗', color: '#4f62f7' },
-  { value: 'meal',          label: '식비',    icon: '🍽️', color: '#f59e0b' },
-  { value: 'accommodation', label: '숙박비',  icon: '🏨', color: '#8b5cf6' },
-  { value: 'supplies',      label: '소모품',  icon: '📦', color: '#06b6d4' },
-  { value: 'entertainment', label: '접대비',  icon: '🎉', color: '#ec4899' },
-  { value: 'other',         label: '기타',    icon: '💼', color: '#6b7280' },
+  { value: 'transport',     label: 'ค่าเดินทาง',      icon: '🚗', color: '#4f62f7' },
+  { value: 'meal',          label: 'ค่าอาหาร',         icon: '🍽️', color: '#f59e0b' },
+  { value: 'accommodation', label: 'ค่าที่พัก',         icon: '🏨', color: '#8b5cf6' },
+  { value: 'supplies',      label: 'วัสดุสิ้นเปลือง',  icon: '📦', color: '#06b6d4' },
+  { value: 'entertainment', label: 'ค่าบันเทิง',        icon: '🎉', color: '#ec4899' },
+  { value: 'other',         label: 'อื่นๆ',             icon: '💼', color: '#6b7280' },
 ]
 const CURRENCIES = ['THB', 'KRW', 'USD']
 
 const ST = {
-  pending:  { bg: 'rgba(245,158,11,0.15)',  color: '#fbbf24', label: '검토중' },
-  approved: { bg: 'rgba(34,197,94,0.15)',   color: '#4ade80', label: '승인됨' },
-  rejected: { bg: 'rgba(239,68,68,0.15)',   color: '#f87171', label: '반려됨' },
+  pending:  { bg: 'rgba(245,158,11,0.15)',  color: '#fbbf24', label: 'รอตรวจสอบ' },
+  approved: { bg: 'rgba(34,197,94,0.15)',   color: '#4ade80', label: 'อนุมัติแล้ว' },
+  rejected: { bg: 'rgba(239,68,68,0.15)',   color: '#f87171', label: 'ไม่อนุมัติ' },
 }
 const EMPTY_FORM = {
   title: '', category: 'transport', amount: '', currency: 'THB',
@@ -69,7 +69,7 @@ export default function ExpensesPage() {
 
   const handleSubmit = async () => {
     if (!form.title || !form.amount || !form.expense_date) {
-      toast.error('항목명, 금액, 지출일을 입력해주세요.')
+      toast.error('กรุณากรอกชื่อรายการ จำนวนเงิน และวันที่จ่าย')
       return
     }
     setSubmitting(true)
@@ -80,8 +80,8 @@ export default function ExpensesPage() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || '신청 실패')
-      toast.success('경비 신청이 완료되었습니다!')
+      if (!res.ok) throw new Error(data.error || 'ยื่นคำขอไม่สำเร็จ')
+      toast.success('ยื่นค่าใช้จ่ายเรียบร้อยแล้ว!')
       setForm(EMPTY_FORM)
       setTab('list')
       fetchExpenses()
@@ -99,22 +99,22 @@ export default function ExpensesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'approved' }),
       })
-      if (!res.ok) throw new Error('승인 실패')
-      toast.success('승인되었습니다.')
+      if (!res.ok) throw new Error('อนุมัติไม่สำเร็จ')
+      toast.success('อนุมัติแล้ว')
       fetchExpenses()
     } catch (err) { toast.error(err.message) }
   }
 
   const handleReject = async () => {
-    if (!rejectReason.trim()) { toast.error('반려 사유를 입력해주세요.'); return }
+    if (!rejectReason.trim()) { toast.error('กรุณากรอกเหตุผลที่ไม่อนุมัติ'); return }
     try {
       const res = await fetch('/api/expenses', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: rejectModal.id, status: 'rejected', rejected_reason: rejectReason }),
       })
-      if (!res.ok) throw new Error('반려 실패')
-      toast.success('반려 처리되었습니다.')
+      if (!res.ok) throw new Error('ไม่อนุมัติไม่สำเร็จ')
+      toast.success('ไม่อนุมัติเรียบร้อยแล้ว')
       setRejectModal(null); setRejectReason('')
       fetchExpenses()
     } catch (err) { toast.error(err.message) }
@@ -134,33 +134,36 @@ export default function ExpensesPage() {
 
   const pendingCount = pendingList.length
   const TABS = [
-    { id: 'list',  label: '📋 내 신청 내역' },
-    { id: 'apply', label: '✏️ 경비 신청' },
-    ...(isAdmin ? [{ id: 'admin', label: `✅ 승인 관리${pendingCount > 0 ? ` (${pendingCount})` : ''}` }] : []),
+    { id: 'list',  label: '📋 รายการของฉัน' },
+    { id: 'apply', label: '✏️ ยื่นค่าใช้จ่าย' },
+    ...(isAdmin ? [{ id: 'admin', label: `✅ จัดการการอนุมัติ${pendingCount > 0 ? ` (${pendingCount})` : ''}` }] : []),
   ]
 
   return (
     <div style={s.page}>
-      <h1 style={s.title}>💰 경비 청구</h1>
-      <p style={s.sub}>업무 경비를 신청하고 정산 현황을 확인하세요</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <h1 style={s.title}>💰 ค่าใช้จ่าย</h1>
+        <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+      </div>
+      <p style={s.sub}>ยื่นค่าใช้จ่ายในการทำงานและตรวจสอบสถานะการอนุมัติ</p>
 
       {/* Stats */}
       <div style={s.stats}>
         <div style={s.statCard('#4f62f7')}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#4f62f7' }}>{myExpenses.length}건</div>
-          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>{isAdmin ? '전체 신청' : '내 신청'}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#4f62f7' }}>{myExpenses.length} รายการ</div>
+          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>{isAdmin ? 'ทั้งหมด' : 'การยื่นของฉัน'}</div>
         </div>
         <div style={s.statCard('#f59e0b')}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#fbbf24' }}>{pendingList.length}건</div>
-          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>검토중</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#fbbf24' }}>{pendingList.length} รายการ</div>
+          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>รอตรวจสอบ</div>
         </div>
         <div style={s.statCard('#4ade80')}>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#4ade80' }}>{expenses.filter(e => e.status === 'approved').length}건</div>
-          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>승인됨</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#4ade80' }}>{expenses.filter(e => e.status === 'approved').length} รายการ</div>
+          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>อนุมัติแล้ว</div>
         </div>
         <div style={s.statCard('#4ade80')}>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#4ade80' }}>{totalApproved.toLocaleString()}</div>
-          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>승인 총액 (THB)</div>
+          <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 4 }}>ยอดอนุมัติรวม (THB)</div>
         </div>
       </div>
 
@@ -171,14 +174,14 @@ export default function ExpensesPage() {
         ))}
       </div>
 
-      {/* ── 내 신청 내역 ── */}
+      {/* ── รายการของฉัน ── */}
       {tab === 'list' && (
         <div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             {['all','pending','approved','rejected'].map(f => (
               <button key={f} onClick={() => { setFilterStatus(f); setPage(1) }}
                 style={{ ...s.tab(filterStatus === f), padding: '5px 14px', fontSize: 12 }}>
-                {{ all:'ทั้งหมด', pending:'รอตรวจสอบ', approved:'อนุมัติ', rejected:'ไม่อนุมัติ' }[f]}
+                {{ all:'ทั้งหมด', pending:'รอตรวจสอบ', approved:'อนุมัติแล้ว', rejected:'ไม่อนุมัติ' }[f]}
               </button>
             ))}
           </div>
@@ -203,14 +206,14 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* ── 경비 신청 폼 ── */}
+      {/* ── แบบฟอร์มยื่นค่าใช้จ่าย ── */}
       {tab === 'apply' && (
         <div style={s.card}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 20 }}>경비 신청서</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 20 }}>แบบฟอร์มค่าใช้จ่าย</div>
 
-          {/* 카테고리 */}
+          {/* ประเภทรายจ่าย */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>지출 분류</label>
+            <label style={s.lbl}>ประเภทรายจ่าย</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {CATEGORIES.map(cat => (
                 <div key={cat.value} onClick={() => setForm({ ...form, category: cat.value })}
@@ -222,16 +225,16 @@ export default function ExpensesPage() {
             </div>
           </div>
 
-          {/* 항목명 */}
+          {/* ชื่อรายการ */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>항목명</label>
-            <input style={s.inp} placeholder="예: 클라이언트 미팅 식사" value={form.title}
+            <label style={s.lbl}>ชื่อรายการ</label>
+            <input style={s.inp} placeholder="เช่น: อาหารกลางวันลูกค้า" value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })} />
           </div>
 
-          {/* 금액 + 통화 */}
+          {/* จำนวนเงิน + สกุลเงิน */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>금액</label>
+            <label style={s.lbl}>จำนวนเงิน</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input type="number" style={{ ...s.inp, flex: 1 }} placeholder="0" value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value })} />
@@ -242,46 +245,46 @@ export default function ExpensesPage() {
             </div>
           </div>
 
-          {/* 지출일 */}
+          {/* วันที่จ่าย */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>지출일</label>
+            <label style={s.lbl}>วันที่จ่าย</label>
             <input type="date" style={s.inp} value={form.expense_date}
               max={new Date().toISOString().slice(0, 10)}
               onChange={e => setForm({ ...form, expense_date: e.target.value })} />
           </div>
 
-          {/* 영수증 링크 */}
+          {/* ลิงก์ใบเสร็จ */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>영수증 링크 <span style={{ color: '#8b91ab' }}>(선택 — Google Drive 공유 링크 붙여넣기)</span></label>
+            <label style={s.lbl}>ลิงก์ใบเสร็จ (ไม่บังคับ) <span style={{ color: '#8b91ab' }}>(Google Drive)</span></label>
             <input style={s.inp} placeholder="https://drive.google.com/file/d/..."
               value={form.receipt_url}
               onChange={e => setForm({ ...form, receipt_url: e.target.value })} />
             <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 6 }}>
-              💡 Drive에 영수증 사진 업로드 → 우클릭 → 링크 복사 → 여기 붙여넣기
+              💡 อัปโหลดใบเสร็จไปยัง Drive → คลิกขวา → คัดลอกลิงก์ → วางที่นี่
             </div>
           </div>
 
-          {/* 설명 */}
+          {/* รายละเอียดเพิ่มเติม */}
           <div style={{ marginBottom: 16 }}>
-            <label style={s.lbl}>상세 설명 (선택)</label>
+            <label style={s.lbl}>รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
             <textarea style={{ ...s.inp, height: 72, resize: 'vertical' }}
-              placeholder="지출 목적이나 상세 내역을 입력해주세요"
+              placeholder="กรุณาระบุวัตถุประสงค์หรือรายละเอียดการจ่าย"
               value={form.description}
               onChange={e => setForm({ ...form, description: e.target.value })} />
           </div>
 
           <div style={{ padding: 12, background: 'rgba(79,98,247,0.08)', borderRadius: 8, fontSize: 12, color: '#8b91ab', marginBottom: 16 }}>
-            ℹ️ 영수증을 첨부하면 승인이 더 빠르게 처리됩니다.
+            ℹ️ การแนบใบเสร็จจะช่วยให้อนุมัติได้รวดเร็วขึ้น
           </div>
 
           <button style={{ ...s.btn, width: '100%', opacity: submitting ? 0.6 : 1 }}
             onClick={handleSubmit} disabled={submitting}>
-            {submitting ? '신청 중...' : '신청하기'}
+            {submitting ? 'กำลังส่ง...' : 'ยื่นคำขอ'}
           </button>
         </div>
       )}
 
-      {/* ── 관리자 승인 탭 ── */}
+      {/* ── แท็บอนุมัติ (แอดมิน) ── */}
       {tab === 'admin' && isAdmin === true && (
         <AdminApprovalTab
           expenses={expenses}
@@ -293,20 +296,20 @@ export default function ExpensesPage() {
         />
       )}
 
-      {/* 반려 모달 */}
+      {/* โมดัลไม่อนุมัติ */}
       {rejectModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 28, width: 400, maxWidth: '90vw' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>반려 사유 입력</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>กรุณากรอกเหตุผล</div>
             <textarea style={{ ...s.inp, height: 96, resize: 'vertical', marginBottom: 16 }}
-              placeholder="반려 사유를 입력해주세요"
+              placeholder="กรุณากรอกเหตุผลที่ไม่อนุมัติ"
               value={rejectReason}
               onChange={e => setRejectReason(e.target.value)} />
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button onClick={() => setRejectModal(null)}
-                style={{ ...s.btn, background: 'rgba(255,255,255,0.06)', color: '#8b91ab' }}>취소</button>
+                style={{ ...s.btn, background: 'rgba(255,255,255,0.06)', color: '#8b91ab' }}>ยกเลิก</button>
               <button onClick={handleReject}
-                style={{ ...s.btn, background: '#ef4444' }}>반려 처리</button>
+                style={{ ...s.btn, background: '#ef4444' }}>ยืนยันไม่อนุมัติ</button>
             </div>
           </div>
         </div>
@@ -315,7 +318,7 @@ export default function ExpensesPage() {
   )
 }
 
-// ── 관리자 승인 탭 컴포넌트 ──
+// ── คอมโพเนนต์แท็บอนุมัติ (แอดมิน) ──
 function AdminApprovalTab({ expenses, loading, getCat, onApprove, onReject, onRefresh }) {
   const [filter, setFilter] = useState('pending')
 
@@ -331,7 +334,7 @@ function AdminApprovalTab({ expenses, loading, getCat, onApprove, onReject, onRe
                 fontWeight: filter === f ? 600 : 400,
                 background: filter === f ? '#4f62f7' : 'rgba(255,255,255,0.06)',
                 color: filter === f ? '#fff' : '#8b91ab' }}>
-              {{ pending:'검토중', approved:'승인됨', rejected:'반려됨', all:'전체' }[f]}
+              {{ pending:'รอตรวจสอบ', approved:'อนุมัติแล้ว', rejected:'ไม่อนุมัติ', all:'ทั้งหมด' }[f]}
               {f === 'pending' && expenses.filter(e => e.status === 'pending').length > 0 &&
                 <span style={{ marginLeft: 4, background: '#ef4444', color: '#fff', borderRadius: 10, padding: '1px 6px', fontSize: 10 }}>
                   {expenses.filter(e => e.status === 'pending').length}
@@ -342,14 +345,14 @@ function AdminApprovalTab({ expenses, loading, getCat, onApprove, onReject, onRe
         </div>
         <button onClick={onRefresh}
           style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#8b91ab', fontSize: 12, cursor: 'pointer' }}>
-          새로고침
+          รีเฟรช
         </button>
       </div>
 
-      {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>불러오는 중...</div>}
+      {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>กำลังโหลด...</div>}
       {!loading && filtered.length === 0 && (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 40, textAlign: 'center', color: '#8b91ab' }}>
-          {filter === 'pending' ? '검토 대기중인 경비가 없습니다 ✓' : '내역이 없습니다'}
+          {filter === 'pending' ? 'ไม่มีรายการรอตรวจสอบ ✓' : 'ไม่มีรายการ'}
         </div>
       )}
       {!loading && filtered.map((exp, i) => (
@@ -361,7 +364,7 @@ function AdminApprovalTab({ expenses, loading, getCat, onApprove, onReject, onRe
   )
 }
 
-// ── 경비 카드 공용 컴포넌트 ──
+// ── คอมโพเนนต์การ์ดค่าใช้จ่าย ──
 function ExpenseCard({ exp, isAdmin, getCat, onApprove, onReject }) {
   const cat = getCat(exp.category)
   const st  = ST[exp.status] || ST.pending
@@ -383,17 +386,17 @@ function ExpenseCard({ exp, isAdmin, getCat, onApprove, onReject }) {
               {Number(exp.amount).toLocaleString()} <span style={{ fontSize: 12, color: '#8b91ab' }}>{exp.currency}</span>
             </div>
             <div style={{ fontSize: 12, color: '#8b91ab' }}>
-              지출일 {exp.expense_date} · 신청일 {exp.submitted_at}
+              วันที่จ่าย {exp.expense_date} · วันที่ยื่น {exp.submitted_at}
             </div>
             {exp.description && (
               <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 3 }}>{exp.description}</div>
             )}
-            {/* 영수증 링크 */}
+            {/* ลิงก์ใบเสร็จ */}
             {exp.receipt_url && (
               exp.receipt_url.startsWith('http') ? (
                 <a href={exp.receipt_url} target="_blank" rel="noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#818cf8', marginTop: 5, textDecoration: 'none' }}>
-                  📎 영수증 보기
+                  📎 ดูใบเสร็จ
                 </a>
               ) : (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#8b91ab', marginTop: 5 }}>
@@ -402,7 +405,7 @@ function ExpenseCard({ exp, isAdmin, getCat, onApprove, onReject }) {
               )
             )}
             {exp.status === 'rejected' && exp.rejected_reason && (
-              <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>반려 사유: {exp.rejected_reason}</div>
+              <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>เหตุผลที่ไม่อนุมัติ: {exp.rejected_reason}</div>
             )}
           </div>
         </div>
@@ -415,17 +418,17 @@ function ExpenseCard({ exp, isAdmin, getCat, onApprove, onReject }) {
             <div style={{ display: 'flex', gap: 6 }}>
               <button onClick={onApprove}
                 style={{ padding: '5px 14px', background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                승인
+                อนุมัติ
               </button>
               <button onClick={onReject}
                 style={{ padding: '5px 14px', background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                반려
+                ไม่อนุมัติ
               </button>
             </div>
           )}
           {exp.approved_by && (
             <div style={{ fontSize: 11, color: '#8b91ab', textAlign: 'right' }}>
-              처리자: {exp.approved_by}<br />{exp.approved_at}
+              ผู้อนุมัติ: {exp.approved_by}<br />{exp.approved_at}
             </div>
           )}
         </div>

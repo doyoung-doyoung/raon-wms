@@ -11,27 +11,27 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true)
   const [todayRecord, setTodayRecord] = useState(null)
   const [checking, setChecking] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
+
+  const now = new Date()
+  const [currentMonth, setCurrentMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
+
+  const today = now.toISOString().slice(0, 10)
 
   useEffect(() => {
     fetchRecords()
-  }, [session, selectedDate])
+  }, [session, currentMonth])
 
   const fetchRecords = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/attendance?date=${selectedDate}`)
+      const res = await fetch(`/api/attendance?month=${currentMonth}`)
       const data = await res.json()
       const list = Array.isArray(data) ? data : []
-      setRecords(list)
+      setRecords(list.sort((a, b) => b.date.localeCompare(a.date)))
 
-      // 오늘 내 기록 찾기
       if (!isAdmin) {
-        const today = new Date().toISOString().slice(0, 10)
-        if (selectedDate === today) {
-          const mine = list.find(r => r.employee_id === session?.user?.email)
-          setTodayRecord(mine || null)
-        }
+        const mine = list.find(r => r.employee_id === session?.user?.email && r.date === today)
+        setTodayRecord(mine || null)
       }
     } catch (e) { console.error(e) }
     setLoading(false)
@@ -73,8 +73,20 @@ export default function AttendancePage() {
     setChecking(false)
   }
 
-  const today = new Date().toISOString().slice(0, 10)
-  const isToday = selectedDate === today
+  const prevMonth = () => {
+    const [y, m] = currentMonth.split('-').map(Number)
+    const d = new Date(y, m - 2)
+    setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+
+  const nextMonth = () => {
+    const [y, m] = currentMonth.split('-').map(Number)
+    const d = new Date(y, m)
+    setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+
+  const isCurrentMonth = currentMonth === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const [dispYear, dispMonth] = currentMonth.split('-')
 
   return (
     <div>
@@ -86,21 +98,17 @@ export default function AttendancePage() {
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            style={{
-              background: '#1e2235', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 8, padding: '8px 12px', color: '#f1f3f9',
-              fontSize: 13, outline: 'none', fontFamily: 'inherit',
-            }}
-          />
+          {/* 월 네비게이션 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e2235', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '4px 8px' }}>
+            <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 18, padding: '0 4px', lineHeight: 1 }}>‹</button>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9', minWidth: 72, textAlign: 'center' }}>{dispYear}.{dispMonth}</span>
+            <button onClick={nextMonth} disabled={isCurrentMonth} style={{ background: 'none', border: 'none', color: isCurrentMonth ? '#3d4060' : '#8b91ab', cursor: isCurrentMonth ? 'default' : 'pointer', fontSize: 18, padding: '0 4px', lineHeight: 1 }}>›</button>
+          </div>
         </div>
       </div>
 
-      {/* 출퇴근 버튼 (직원용, 오늘만) */}
-      {!isAdmin && isToday && (
+      {/* 출퇴근 버튼 (직원용, 이번 달 볼 때만) */}
+      {!isAdmin && isCurrentMonth && (
         <div style={{
           background: 'linear-gradient(135deg, rgba(79,98,247,0.15) 0%, rgba(124,58,237,0.1) 100%)',
           border: '1px solid rgba(79,98,247,0.25)',
@@ -108,7 +116,7 @@ export default function AttendancePage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
         }}>
           <div>
-            <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 4 }}>오늘 출퇴근</div>
+            <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 4 }}>오늘 출퇴근 ({today})</div>
             {todayRecord ? (
               <div>
                 <div style={{ fontSize: 15, color: '#4ade80', fontWeight: 600 }}>
@@ -176,8 +184,8 @@ export default function AttendancePage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {records.map(record => (
             <div key={record.id} style={{
-              background: '#141828',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: record.date === today ? 'rgba(79,98,247,0.06)' : '#141828',
+              border: `1px solid ${record.date === today ? 'rgba(79,98,247,0.25)' : 'rgba(255,255,255,0.07)'}`,
               borderRadius: 14, padding: '16px 20px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
             }}>
@@ -195,8 +203,9 @@ export default function AttendancePage() {
                       {record.employee_name}
                     </div>
                   )}
-                  <div style={{ fontSize: 13, color: '#8b91ab' }}>
+                  <div style={{ fontSize: 13, color: record.date === today ? '#818cf8' : '#8b91ab', fontWeight: record.date === today ? 600 : 400 }}>
                     {record.date}
+                    {record.date === today && <span style={{ marginLeft: 6, fontSize: 11, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '1px 6px', borderRadius: 4 }}>오늘</span>}
                   </div>
                 </div>
               </div>

@@ -42,9 +42,9 @@ export default function MyDocumentsPage() {
 
   function statusBadge(status) {
     const map = {
-      pending: { label: '대기 중', bg: '#2d3a6b', color: '#818cf8' },
-      approved: { label: '발급 완료', bg: '#1a3a2a', color: '#4ade80' },
-      rejected: { label: '반려', bg: '#3a1a1a', color: '#f87171' },
+      pending: { label: 'รอตรวจสอบ', bg: '#2d3a6b', color: '#818cf8' },
+      approved: { label: 'ออกเอกสารแล้ว', bg: '#1a3a2a', color: '#4ade80' },
+      rejected: { label: 'ไม่อนุมัติ', bg: '#3a1a1a', color: '#f87171' },
     }
     const s = map[status] || map.pending
     return (
@@ -64,20 +64,20 @@ export default function MyDocumentsPage() {
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9' }}>내 서류함</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9' }}>เอกสารของฉัน</h1>
         <a href="/documents/request"
           style={{ background: '#4f62f7', color: 'white', padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-          + 발급 신청
+          + ขอเอกสาร
         </a>
       </div>
 
       {/* 필터 탭 */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {[
-          { key: 'all', label: '전체' },
-          { key: 'pending', label: '대기 중' },
-          { key: 'approved', label: '발급 완료' },
-          { key: 'rejected', label: '반려' },
+          { key: 'all', label: 'ทั้งหมด' },
+          { key: 'pending', label: 'รอตรวจสอบ' },
+          { key: 'approved', label: 'ออกเอกสารแล้ว' },
+          { key: 'rejected', label: 'ไม่อนุมัติ' },
         ].map(tab => (
           <button
             key={tab.key}
@@ -98,10 +98,10 @@ export default function MyDocumentsPage() {
       ) : filtered.length === 0 ? (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 48, textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🗂️</div>
-          <div style={{ color: '#8b91ab', fontSize: 14 }}>서류가 없어요.</div>
+          <div style={{ color: '#8b91ab', fontSize: 14 }}>ไม่มีเอกสาร</div>
           <a href="/documents/request"
             style={{ display: 'inline-block', marginTop: 16, background: '#4f62f7', color: 'white', padding: '8px 20px', borderRadius: 10, fontSize: 13, textDecoration: 'none' }}>
-            발급 신청하기
+            ยื่นขอเอกสาร
           </a>
         </div>
       ) : (
@@ -114,7 +114,7 @@ export default function MyDocumentsPage() {
                     {DOC_TYPES[doc.documentType] || doc.documentType}
                   </div>
                   <div style={{ fontSize: 11, color: '#8b91ab' }}>
-                    신청일: {new Date(doc.requestedAt).toLocaleDateString('ko-KR')}
+                    วันที่ยื่น: {new Date(doc.requestedAt).toLocaleDateString('th-TH')}
                   </div>
                 </div>
                 {statusBadge(doc.status)}
@@ -129,12 +129,12 @@ export default function MyDocumentsPage() {
               {doc.status === 'approved' && (
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 8, alignItems: 'center' }}>
                   <div style={{ fontSize: 11, color: '#8b91ab', flex: 1 }}>
-                    발급일: {new Date(doc.approvedAt).toLocaleDateString('ko-KR')}
+                    วันที่ออก: {new Date(doc.approvedAt).toLocaleDateString('th-TH')}
                   </div>
                   {doc.driveUrl && (
                     <a href={doc.driveUrl} target="_blank" rel="noreferrer"
                       style={{ background: '#1e2d5a', color: '#818cf8', padding: '6px 14px', borderRadius: 8, fontSize: 12, textDecoration: 'none', fontWeight: 500 }}>
-                      Drive에서 보기
+                      ดูเอกสาร
                     </a>
                   )}
                 </div>
@@ -142,7 +142,7 @@ export default function MyDocumentsPage() {
 
               {doc.status === 'rejected' && (
                 <div style={{ marginTop: 8, fontSize: 12, color: '#f87171' }}>
-                  반려됐어요. 다시 신청해주세요.
+                  ไม่ได้รับการอนุมัติ{doc.rejectedReason ? ` · เหตุผล: ${doc.rejectedReason}` : ''} กรุณายื่นใหม่อีกครั้ง
                 </div>
               )}
             </div>

@@ -27,6 +27,8 @@ export default function LeavesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [error, setError]       = useState('')
+  const [rejectModal, setRejectModal] = useState(null)
+  const [rejectReason, setRejectReason] = useState('')
 
   const now = new Date()
   const [calYear, setCalYear]   = useState(now.getFullYear())
@@ -109,15 +111,19 @@ export default function LeavesPage() {
     } catch { /* ignore */ }
   }
 
-  const handleReject = async (id) => {
+  const handleConfirmReject = async () => {
+    const id = rejectModal
     try {
       await fetch('/api/leaves', {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: 'rejected' }),
+        body: JSON.stringify({ id, status: 'rejected', rejected_reason: rejectReason }),
       })
-      setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'rejected' } : l))
-    } catch { /* ignore */ }
+      setLeaves(prev => prev.map(l => l.id === id ? { ...l, status: 'rejected', custom_1: rejectReason } : l))
+    } catch { /* ignore */ } finally {
+      setRejectModal(null)
+      setRejectReason('')
+    }
   }
 
   // calendar
@@ -213,6 +219,11 @@ export default function LeavesPage() {
                           {leave.start_date} ~ {leave.end_date}
                         </div>
                         <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>{leave.reason}</div>
+                        {leave.status === 'rejected' && leave.custom_1 && (
+                          <div style={{ fontSize: 12, color: '#f87171', marginTop: 4, padding: '4px 8px', background: 'rgba(239,68,68,0.08)', borderRadius: 6, borderLeft: '2px solid #f87171' }}>
+                            반려 사유: {leave.custom_1}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
@@ -220,7 +231,7 @@ export default function LeavesPage() {
                       {isAdmin && leave.status === 'pending' && (
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button onClick={() => handleApprove(leave.id)} style={{ padding: '4px 12px', background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>승인</button>
-                          <button onClick={() => handleReject(leave.id)}  style={{ padding: '4px 12px', background: 'rgba(239,68,68,0.15)',  color: '#f87171', border: '1px solid rgba(239,68,68,0.3)',  borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>거절</button>
+                          <button onClick={() => { setRejectModal(leave.id); setRejectReason('') }} style={{ padding: '4px 12px', background: 'rgba(239,68,68,0.15)',  color: '#f87171', border: '1px solid rgba(239,68,68,0.3)',  borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>거절</button>
                         </div>
                       )}
                     </div>
@@ -294,6 +305,37 @@ export default function LeavesPage() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 반려 사유 입력 모달 */}
+      {rejectModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 28, width: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#f1f3f9', marginBottom: 6 }}>휴가 반려</div>
+            <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 18 }}>반려 사유를 입력해주세요. 직원에게 이메일로 전달됩니다.</div>
+            <textarea
+              style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f1f3f9', fontSize: 13, outline: 'none', boxSizing: 'border-box', resize: 'vertical', minHeight: 80 }}
+              placeholder="반려 사유를 입력하세요 (선택)"
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              autoFocus
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => { setRejectModal(null); setRejectReason('') }}
+                style={{ padding: '8px 18px', background: 'rgba(255,255,255,0.06)', color: '#8b91ab', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 13, cursor: 'pointer' }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirmReject}
+                style={{ padding: '8px 18px', background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              >
+                반려 확정
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

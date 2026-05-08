@@ -5,14 +5,14 @@ export const dynamic = 'force-dynamic'
 
 export const DEFAULT_SETTINGS = {
   menuItems: {
-    announcements: { labelTh: 'ประกาศ', labelKo: '공지사항', icon: '📢', href: '/announcements', visible: true },
-    attendance:    { labelTh: 'เวลาทำงาน', labelKo: '출퇴근', icon: '⏰', href: '/attendance', visible: true },
-    leaves:        { labelTh: 'การลา', labelKo: '휴가/병가', icon: '🗓️', href: '/leaves', visible: true },
-    expenses:      { labelTh: 'ค่าใช้จ่าย', labelKo: '경비 청구', icon: '💰', href: '/expenses', visible: true },
-    documents:     { labelTh: 'เอกสารของฉัน', labelKo: '내 서류함', icon: '📄', href: '/documents/my-documents', visible: true },
-    warnings:      { labelTh: 'หนังสือเตือน', labelKo: '경고장', icon: '⚠️', href: '/warnings', visible: false },
-    quotations:    { labelTh: 'ใบเสนอราคา', labelKo: '견적서/인보이스', icon: '📄', href: '/quotations', visible: true },
-    clients:       { labelTh: 'ลูกค้า\u00A0', labelKo: '고객 관리', icon: '👥', href: '/clients', visible: false },
+    announcements:   { labelTh: 'ประกาศ', labelKo: '공지사항', icon: '📢', href: '/announcements', visible: true },
+    attendance:      { labelTh: 'เวลาทำงาน', labelKo: '출퇴근', icon: '⏰', href: '/attendance', visible: true },
+    leaves:          { labelTh: 'การลา', labelKo: '휴가/병가', icon: '🗓️', href: '/leaves', visible: true },
+    expenses:        { labelTh: 'ค่าใช้จ่าย', labelKo: '경비 청구', icon: '💰', href: '/expenses', visible: true },
+    documentRequest: { labelTh: 'ขอเอกสาร', labelKo: '서류 신청', icon: '📝', href: '/documents/request', visible: true },
+    warnings:        { labelTh: 'หนังสือเตือน', labelKo: '경고장', icon: '⚠️', href: '/warnings', visible: false },
+    quotations:      { labelTh: 'ใบเสนอราคา', labelKo: '견적서/인보이스', icon: '📋', href: '/quotations', visible: true },
+    clients:         { labelTh: 'ลูกค้า', labelKo: '고객 관리', icon: '👥', href: '/clients', visible: true },
   },
   officeLocation: {
     lat: '13.8199',

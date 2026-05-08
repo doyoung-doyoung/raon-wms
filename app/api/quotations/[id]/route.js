@@ -45,9 +45,12 @@ function buildPdfData(q, docType) {
     grandTotal:           Number(q.grand_total || 0),
     paymentDays:          Number(q.payment_days || 3),
     remark:               q.remark || '',
-    issuedBy:             q.created_by_name || '',
-    paidAt:               q.paid_at   || '',
-    paidNote:             q.paid_note || '',
+    issuedBy:                  q.created_by_name || '',
+    directorApprovedByName:    q.director_approved_by_name || '',
+    directorApprovedAt:        q.director_approved_at || '',
+    customerApprovedAt:        q.customer_approved_at || '',
+    paidAt:                    q.paid_at   || '',
+    paidNote:                  q.paid_note || '',
   }
 }
 
@@ -138,11 +141,12 @@ export async function PATCH(request, { params }) {
       }
       await updateRow(SHEET_ID, SHEET_NAME, id, {
         ...q,
-        status:                 'approved',
-        director_approved_by:   session.user.email,
-        director_approved_at:   now,
-        director_reject_reason: '',
-        updated_at:             now,
+        status:                      'approved',
+        director_approved_by:        session.user.email,
+        director_approved_by_name:   session.user.name || session.user.email,
+        director_approved_at:        now,
+        director_reject_reason:      '',
+        updated_at:                  now,
       })
       return Response.json({ success: true })
     }

@@ -120,9 +120,12 @@ export default function QuotationPDF({ data }) {
     grandTotal   = 0,
     paymentDays  = 3,
     remark       = '',
-    issuedBy     = '',
-    paidAt       = '',
-    paidNote     = '',
+    issuedBy               = '',
+    directorApprovedByName = '',
+    directorApprovedAt     = '',
+    customerApprovedAt     = '',
+    paidAt                 = '',
+    paidNote               = '',
   } = data
 
   const isDomestic = clientType === 'domestic'
@@ -332,19 +335,19 @@ export default function QuotationPDF({ data }) {
             <Text style={s.sigTitle}>Issued by</Text>
             <View style={s.sigLine} />
             <Text style={s.sigName}>{issuedBy || '..................................'}</Text>
-            <Text style={s.sigDate}>Date: ..................................</Text>
+            <Text style={s.sigDate}>Date: {fmtDate(docDate) || '..................................'}</Text>
           </View>
           <View style={s.sigCol}>
-            <Text style={s.sigTitle}>Proposed by</Text>
+            <Text style={s.sigTitle}>Approved by (Director)</Text>
             <View style={s.sigLine} />
-            <Text style={s.sigName}>Raon (Thailand) Co., Ltd.</Text>
-            <Text style={s.sigDate}>Date: ..................................</Text>
+            <Text style={s.sigName}>{directorApprovedByName || 'Raon (Thailand) Co., Ltd.'}</Text>
+            <Text style={s.sigDate}>Date: {directorApprovedAt ? fmtDate(directorApprovedAt) : '..................................'}</Text>
           </View>
           <View style={s.sigCol}>
-            <Text style={s.sigTitle}>Approved by</Text>
+            <Text style={s.sigTitle}>Approved by (Customer)</Text>
             <View style={s.sigLine} />
             <Text style={s.sigName}>{client.name || '..................................'}</Text>
-            <Text style={s.sigDate}>Date: ..................................</Text>
+            <Text style={s.sigDate}>Date: {customerApprovedAt ? fmtDate(customerApprovedAt) : '..................................'}</Text>
           </View>
         </View>
 

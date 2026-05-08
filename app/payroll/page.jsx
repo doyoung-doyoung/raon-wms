@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
 
 const EMPTY_FORM = {
-  housing: 0, transport: 0, meal: 0, ot: 0, other_income: 0,
-  tax: 0, social_security: 875, other_deduction: 0, notes: '',
+  housing: '', transport: '', meal: '', ot: '', other_income: '',
+  tax: '', social_security: '875', other_deduction: '', notes: '',
 }
 
 function calcNet(r) {
@@ -66,22 +66,22 @@ export default function PayrollPage() {
   useEffect(() => { fetchData() }, [fetchData])
 
   const openCreate = (emp) => {
-    setForm({ ...EMPTY_FORM, base_salary: Number(emp.salary || 0) })
+    setForm({ ...EMPTY_FORM, base_salary: emp.salary || '0' })
     setFormError('')
     setModal({ mode: 'create', employee: emp })
   }
 
   const openEdit = (emp, payroll) => {
     setForm({
-      base_salary:     Number(payroll.base_salary || 0),
-      housing:         Number(payroll.housing || 0),
-      transport:       Number(payroll.transport || 0),
-      meal:            Number(payroll.meal || 0),
-      ot:              Number(payroll.ot || 0),
-      other_income:    Number(payroll.other_income || 0),
-      tax:             Number(payroll.tax || 0),
-      social_security: Number(payroll.social_security || 875),
-      other_deduction: Number(payroll.other_deduction || 0),
+      base_salary:     String(payroll.base_salary || '0'),
+      housing:         String(payroll.housing || '0'),
+      transport:       String(payroll.transport || '0'),
+      meal:            String(payroll.meal || '0'),
+      ot:              String(payroll.ot || '0'),
+      other_income:    String(payroll.other_income || '0'),
+      tax:             String(payroll.tax || '0'),
+      social_security: String(payroll.social_security || '875'),
+      other_deduction: String(payroll.other_deduction || '0'),
       notes:           payroll.notes || '',
     })
     setFormError('')
@@ -332,27 +332,27 @@ export default function PayrollPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div>
                   <label style={s.label}>기본급 (Base Salary)</label>
-                  <input type="number" style={s.input} value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>주거수당 (Housing)</label>
-                  <input type="number" style={s.input} value={form.housing} onChange={e => setForm(f => ({ ...f, housing: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.housing} onChange={e => setForm(f => ({ ...f, housing: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>교통비 (Transport)</label>
-                  <input type="number" style={s.input} value={form.transport} onChange={e => setForm(f => ({ ...f, transport: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.transport} onChange={e => setForm(f => ({ ...f, transport: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>식비 (Meal)</label>
-                  <input type="number" style={s.input} value={form.meal} onChange={e => setForm(f => ({ ...f, meal: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.meal} onChange={e => setForm(f => ({ ...f, meal: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>초과근무수당 (OT)</label>
-                  <input type="number" style={s.input} value={form.ot} onChange={e => setForm(f => ({ ...f, ot: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.ot} onChange={e => setForm(f => ({ ...f, ot: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>기타수당 (Other)</label>
-                  <input type="number" style={s.input} value={form.other_income} onChange={e => setForm(f => ({ ...f, other_income: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.other_income} onChange={e => setForm(f => ({ ...f, other_income: e.target.value }))} />
                 </div>
               </div>
 
@@ -361,15 +361,15 @@ export default function PayrollPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
                 <div>
                   <label style={s.label}>소득세 (Income Tax)</label>
-                  <input type="number" style={s.input} value={form.tax} onChange={e => setForm(f => ({ ...f, tax: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.tax} onChange={e => setForm(f => ({ ...f, tax: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>사회보험 (Social Security)</label>
-                  <input type="number" style={s.input} value={form.social_security} onChange={e => setForm(f => ({ ...f, social_security: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.social_security} onChange={e => setForm(f => ({ ...f, social_security: e.target.value }))} />
                 </div>
                 <div>
                   <label style={s.label}>기타공제 (Other Deduction)</label>
-                  <input type="number" style={s.input} value={form.other_deduction} onChange={e => setForm(f => ({ ...f, other_deduction: Number(e.target.value) }))} />
+                  <input type="number" style={s.input} value={form.other_deduction} onChange={e => setForm(f => ({ ...f, other_deduction: e.target.value }))} />
                 </div>
               </div>
 

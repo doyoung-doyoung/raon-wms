@@ -88,6 +88,7 @@ export async function PATCH(request) {
       status,
       approved_by: session.user.name,
       approved_at: today,
+      custom_1: status === 'rejected' ? (rejected_reason || '') : '',
     })
 
     // 이메일 + PDF 발송
@@ -122,7 +123,7 @@ export async function PATCH(request) {
               days: leave.days,
               reason: leave.reason || '',
               isPaid: leave.is_paid !== 'false',
-              approvedBy: session.user.name,
+              approvedBy: process.env.ADMIN_NAME || 'Jung Doyoung',
               approvedAt: today,
               directorName: process.env.ADMIN_NAME || 'Doyoung Jung',
               directorRole: 'กรรมการบริษัท (Managing Director)',

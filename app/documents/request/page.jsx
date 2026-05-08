@@ -90,7 +90,10 @@ export default function DocumentRequestPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9', marginBottom: 24 }}>서류 발급 신청</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9' }}>ขอเอกสาร</h1>
+        <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+      </div>
 
       {/* 신청 폼 */}
       <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
@@ -120,7 +123,7 @@ export default function DocumentRequestPage() {
 
         {submitted && (
           <div style={{ background: '#1a3a2a', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, padding: '10px 16px', marginBottom: 16, color: '#4ade80', fontSize: 13 }}>
-            신청이 완료됐어요! 이사님 승인 후 이메일로 발송됩니다.
+            ยื่นคำขอเรียบร้อยแล้ว! หลังจากได้รับการอนุมัติจะส่งทางอีเมล
           </div>
         )}
 

@@ -114,7 +114,7 @@ export default function LeavesPage() {
   const statusInfo = {
     pending:  { label: 'รอดำเนินการ', color: '#fbbf24', bg: 'rgba(245,158,11,0.1)' },
     approved: { label: 'อนุมัติแล้ว',  color: '#4ade80', bg: 'rgba(34,197,94,0.1)' },
-    rejected: { label: 'ไม่อนุมัติ',   color: '#f87171', bg: 'rgba(239,68,68,0.1)' },
+    rejected: { label: 'ปฏิเสธ',       color: '#f87171', bg: 'rgba(239,68,68,0.1)' },
   }
 
   const filteredLeaves = leaves.filter(l => {
@@ -236,6 +236,11 @@ export default function LeavesPage() {
                     </div>
                     <div style={{ fontSize: 12, color: '#8b91ab' }}>{leave.start_date} ~ {leave.end_date} ({leave.days} วัน)</div>
                     <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{leave.reason}</div>
+                    {leave.status === 'rejected' && leave.custom_1 && (
+                      <div style={{ fontSize: 12, color: '#f87171', marginTop: 4 }}>
+                        ❌ สาเหตุ: {leave.custom_1}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, flexShrink: 0 }}>
@@ -290,10 +295,11 @@ export default function LeavesPage() {
             {/* 휴가 종류 */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 12, color: '#8b91ab', marginBottom: 8 }}>ประเภทการลา *</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                 {[
-                  { key: 'annual',   label: 'พักร้อน',          color: '#4f62f7', bg: 'rgba(79,98,247,0.1)' },
-                  { key: 'personal', label: 'ลากิจ',             color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+                  { key: 'sick',     label: 'ลาป่วย',           color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+                  { key: 'annual',   label: 'พักร้อน',           color: '#4f62f7', bg: 'rgba(79,98,247,0.1)' },
+                  { key: 'personal', label: 'ลากิจ',              color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
                   { key: 'unpaid',   label: 'ไม่รับค่าจ้าง',    color: '#8b91ab', bg: 'rgba(139,145,171,0.1)' },
                 ].map(({ key, label, color, bg }) => (
                   <button key={key} onClick={() => { setForm(p => ({ ...p, leave_type: key })); setCalendarSelection({ startDate: null, endDate: null, days: 0 }) }} style={{
@@ -306,9 +312,16 @@ export default function LeavesPage() {
                   </button>
                 ))}
               </div>
-              <div style={{ marginTop: 8, padding: '10px 12px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 8, fontSize: 12, color: '#4ade80' }}>
-                หากขาดงาน ระบบจะส่งอีเมลลาป่วยอัตโนมัติ
-              </div>
+              {form.leave_type === 'sick' && (
+                <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 8, fontSize: 12, color: '#4ade80' }}>
+                  ลาป่วยสามารถขอได้ตั้งแต่วันนี้ (ไม่ต้องแจ้งล่วงหน้า)
+                </div>
+              )}
+              {(form.leave_type === 'annual' || form.leave_type === 'personal' || form.leave_type === 'unpaid') && (
+                <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8, fontSize: 12, color: '#fbbf24' }}>
+                  ต้องแจ้งล่วงหน้า 5 วัน
+                </div>
+              )}
             </div>
 
             {/* 달력 */}

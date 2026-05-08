@@ -164,29 +164,11 @@ export default function AnnouncementPDF({ data }) {
           <Text key={i} style={styles.contentBlock}>{p + ' '}</Text>
         ))}
 
-        <View style={styles.signSection}>
-          <Text style={styles.signLabel}>{'ลงรายมือชื่อ เพื่อเป็นการรับทราบเนื้อหา '}</Text>
-
-          <View style={styles.companyRow}>
-            <View style={styles.companyBox}>
-              <Text style={{ fontSize: 10, color: '#666666', marginBottom: 6 }}>{'บริษัท '}</Text>
-              <Image style={styles.sigImage} src={sigPath} />
-              <View style={styles.sigLine} />
-              <Text style={styles.sigName}>{(directorName || '') + ' '}</Text>
-              <Text style={styles.sigRole}>{(directorRole || 'กรรมการบริษัท') + ' '}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.empSignTitle}>{'พนักงาน '}</Text>
-          {[...Array(8)].map((_, i) => (
-            <View key={i} style={styles.empRow}>
-              <View style={styles.empBox} />
-              <Text style={styles.empLabel}> </Text>
-              <View style={styles.empNameLine} />
-              <Text style={styles.empLabel}>{'ตำแหน่ง '}</Text>
-              <View style={styles.empPosLine} />
-            </View>
-          ))}
+        <View style={{ marginTop: 30, alignItems: 'flex-end' }}>
+          <Image style={styles.sigImage} src={sigPath} />
+          <View style={styles.sigLine} />
+          <Text style={styles.sigName}>{(directorName || '') + ' '}</Text>
+          <Text style={styles.sigRole}>{(directorRole || 'กรรมการบริษัท') + ' '}</Text>
         </View>
       </Page>
     </Document>

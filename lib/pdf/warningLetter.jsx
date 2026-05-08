@@ -69,7 +69,8 @@ export default function WarningLetterPDF({ data }) {
 
         <View style={styles.divider} />
 
-        <Text style={styles.bodyText}>{'บริษัท ราอน (ไทยแลนด์) จำกัด ขอแจ้งให้ท่านทราบว่า ท่านได้กระทำการอันเป็นการละเมิดระเบียบและข้อบังคับของบริษัท\u00A0'}</Text>
+        <Text style={styles.bodyText}>{'บริษัท ราอน (ไทยแลนด์) จำกัด\u00A0'}</Text>
+        <Text style={styles.bodyText}>{'ขอแจ้งให้ท่านทราบว่า ท่านได้กระทำการอันเป็นการละเมิดระเบียบและข้อบังคับของบริษัท\u00A0'}</Text>
         <Text style={styles.bodyText}>{'ทั้งนี้ รายละเอียดของการกระทำดังกล่าวมีดังต่อไปนี้\u00A0'}</Text>
 
         <Text style={styles.sectionTitle}>{'สาเหตุการออกหนังสือเตือน / Reason for Warning:'}</Text>
@@ -94,7 +95,7 @@ export default function WarningLetterPDF({ data }) {
           )}
         </View>
 
-        <Text style={styles.bodyText}>{'บริษัทขอให้ท่านปรับปรุงพฤติกรรมดังกล่าวโดยเร็ว หากท่านยังคงกระทำการในลักษณะดังกล่าวซ้ำอีก\u00A0'}</Text>
+        <Text style={styles.bodyText}>{'บริษัทขอให้ท่านปรับปรุงพฤติกรรมดังกล่าวโดยทันที หากท่านยังคงกระทำในลักษณะเดิมอีก \u00A0'}</Text>
         <Text style={styles.bodyText}>{'ขอสงวนสิทธิ์ในการดำเนินการตามระเบียบและข้อบังคับของบริษัทอย่างเคร่งครัดต่อไป\u00A0'}</Text>
 
         <View style={styles.sigArea}>
@@ -102,7 +103,7 @@ export default function WarningLetterPDF({ data }) {
           <Image style={styles.sigImage} src={sigPath} />
           <View style={styles.sigLine} />
           <Text style={styles.sigName}>{(directorName || '') + '\u00A0'}</Text>
-          <Text style={styles.sigRole}>{directorRole || 'กรรมการบริษัท (Managing Director)'}</Text>
+          <Text style={styles.sigRole}>{(directorRole || 'กรรมการบริษัท (Managing Director)') + '\u00A0'}</Text>
         </View>
       </Page>
     </Document>
