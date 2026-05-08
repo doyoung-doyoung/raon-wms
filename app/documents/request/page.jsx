@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 
 const DOC_TYPES = [
-  { value: 'salary-certificate', label: '재직증명서 (หนังสือรับรองเงินเดือน)' },
-  { value: 'payslip', label: '월급명세서 (สลิปเงินเดือน)' },
+  { value: 'salary-certificate', label: 'หนังสือรับรองเงินเดือน' },
+  { value: 'payslip', label: 'สลิปเงินเดือน' },
 ]
 
 export default function DocumentRequestPage() {
@@ -39,8 +39,8 @@ export default function DocumentRequestPage() {
   }
 
   async function handleSubmit() {
-    if (!empInfo) return alert('직원 정보를 찾을 수 없어요.')
-    if (!form.documentType) return alert('서류 종류를 선택해주세요.')
+    if (!empInfo) return alert('ไม่พบข้อมูลพนักงาน')
+    if (!form.documentType) return alert('กรุณาเลือกประเภทเอกสาร')
     setLoading(true)
     try {
       const res = await fetch('/api/documents/request', {
@@ -61,10 +61,10 @@ export default function DocumentRequestPage() {
         loadMyRequests(empInfo.id)
         setTimeout(() => setSubmitted(false), 3000)
       } else {
-        alert('오류: ' + data.error)
+        alert('เกิดข้อผิดพลาด: ' + data.error)
       }
     } catch (err) {
-      alert('오류: ' + err.message)
+      alert('เกิดข้อผิดพลาด: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -72,9 +72,9 @@ export default function DocumentRequestPage() {
 
   function statusBadge(status) {
     const map = {
-      pending: { label: '대기 중', bg: '#2d3a6b', color: '#818cf8' },
-      approved: { label: '승인 완료', bg: '#1a3a2a', color: '#4ade80' },
-      rejected: { label: '반려', bg: '#3a1a1a', color: '#f87171' },
+      pending: { label: 'รอตรวจสอบ', bg: '#2d3a6b', color: '#818cf8' },
+      approved: { label: 'ออกเอกสารแล้ว', bg: '#1a3a2a', color: '#4ade80' },
+      rejected: { label: 'ไม่อนุมัติ', bg: '#3a1a1a', color: '#f87171' },
     }
     const s = map[status] || map.pending
     return (
@@ -92,13 +92,13 @@ export default function DocumentRequestPage() {
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, color: '#f1f3f9' }}>ขอเอกสาร</h1>
-        <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+        <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a>
       </div>
 
       {/* 신청 폼 */}
       <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 24, marginBottom: 24 }}>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>서류 종류</label>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>ประเภทเอกสาร</label>
           <select
             value={form.documentType}
             onChange={e => setForm(f => ({ ...f, documentType: e.target.value }))}
@@ -111,11 +111,11 @@ export default function DocumentRequestPage() {
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>요청 메모 (선택사항)</label>
+          <label style={{ display: 'block', fontSize: 13, color: '#8b91ab', marginBottom: 6 }}>บันทึก (ไม่บังคับ)</label>
           <textarea
             value={form.requestNote}
             onChange={e => setForm(f => ({ ...f, requestNote: e.target.value }))}
-            placeholder="예: 비자 신청용, 은행 제출용..."
+            placeholder="เช่น: สำหรับขอวีซ่า, ยื่นธนาคาร..."
             rows={3}
             style={{ width: '100%', background: '#0d1020', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px', color: '#f1f3f9', fontSize: 14, resize: 'none', fontFamily: 'inherit' }}
           />
@@ -132,14 +132,14 @@ export default function DocumentRequestPage() {
           disabled={loading}
           style={{ width: '100%', background: '#4f62f7', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, fontFamily: 'inherit' }}
         >
-          {loading ? '신청 중...' : '발급 신청하기'}
+          {loading ? 'กำลังดำเนินการ...' : 'ยื่นขอเอกสาร'}
         </button>
       </div>
 
       {/* 신청 내역 */}
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f1f3f9', marginBottom: 14 }}>내 신청 내역</h2>
+      <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f1f3f9', marginBottom: 14 }}>ประวัติการยื่นขอ</h2>
       {myRequests.length === 0 ? (
-        <div style={{ color: '#8b91ab', fontSize: 14, textAlign: 'center', padding: 32 }}>신청 내역이 없어요.</div>
+        <div style={{ color: '#8b91ab', fontSize: 14, textAlign: 'center', padding: 32 }}>ยังไม่มีการยื่นขอ</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myRequests.map(req => (
@@ -149,15 +149,15 @@ export default function DocumentRequestPage() {
                 {statusBadge(req.status)}
               </div>
               <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 6 }}>
-                신청일: {new Date(req.requestedAt).toLocaleDateString('ko-KR')}
+                วันที่ยื่น: {new Date(req.requestedAt).toLocaleDateString('th-TH')}
               </div>
               {req.requestNote && (
-                <div style={{ fontSize: 12, color: '#8b91ab' }}>메모: {req.requestNote}</div>
+                <div style={{ fontSize: 12, color: '#8b91ab' }}>บันทึก: {req.requestNote}</div>
               )}
               {req.status === 'approved' && req.driveUrl && (
                 <a href={req.driveUrl} target="_blank" rel="noreferrer"
                   style={{ display: 'inline-block', marginTop: 10, background: '#1e2d5a', color: '#818cf8', padding: '6px 14px', borderRadius: 8, fontSize: 12, textDecoration: 'none' }}>
-                  Drive에서 보기
+                  ดูเอกสาร
                 </a>
               )}
             </div>

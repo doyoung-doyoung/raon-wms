@@ -139,7 +139,7 @@ export default function LeavesPage() {
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>ทั้งหมด {leaves.length} รายการ</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a>
           {!isAdmin && (
             <button onClick={() => setShowForm(true)} style={{
               padding: '9px 20px', background: '#4f62f7', color: '#fff',

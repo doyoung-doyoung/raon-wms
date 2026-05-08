@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 const STATUS = {
-  draft:             { label: 'Draft',             color: '#8b91ab', bg: 'rgba(139,145,171,0.15)' },
-  pending_director:  { label: 'Awaiting Approval', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
-  approved:          { label: 'Director Approved', color: '#4f62f7', bg: 'rgba(79,98,247,0.15)'   },
-  customer_approved: { label: 'Customer Approved', color: '#06b6d4', bg: 'rgba(6,182,212,0.15)'   },
-  invoiced:          { label: 'Invoice Issued',    color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
-  paid:              { label: 'Paid',              color: '#4ade80', bg: 'rgba(74,222,128,0.15)'  },
-  cancelled:         { label: 'Cancelled',         color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
+  draft:             { label: 'ร่าง',                color: '#8b91ab', bg: 'rgba(139,145,171,0.15)' },
+  pending_director:  { label: 'รออนุมัติ',            color: '#f59e0b', bg: 'rgba(245,158,11,0.15)'  },
+  approved:          { label: 'ผู้อำนวยการอนุมัติ',   color: '#4f62f7', bg: 'rgba(79,98,247,0.15)'   },
+  customer_approved: { label: 'ลูกค้าอนุมัติ',        color: '#06b6d4', bg: 'rgba(6,182,212,0.15)'   },
+  invoiced:          { label: 'ออกใบแจ้งหนี้แล้ว',    color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
+  paid:              { label: 'ชำระแล้ว',             color: '#4ade80', bg: 'rgba(74,222,128,0.15)'  },
+  cancelled:         { label: 'ยกเลิก',               color: '#f87171', bg: 'rgba(248,113,113,0.15)' },
 }
 
 const s = {
@@ -30,13 +30,13 @@ const s = {
 }
 
 const TABS = [
-  { id: 'all',             label: 'All' },
-  { id: 'draft',           label: 'Draft' },
-  { id: 'pending_director',label: '🔔 Pending' },
-  { id: 'approved',        label: 'Approved' },
-  { id: 'customer_approved',label: 'Customer ✓' },
-  { id: 'invoiced',        label: 'Invoice' },
-  { id: 'paid',            label: '✅ Paid' },
+  { id: 'all',              label: 'ทั้งหมด' },
+  { id: 'draft',            label: 'ร่าง' },
+  { id: 'pending_director', label: '🔔 รออนุมัติ' },
+  { id: 'approved',         label: 'อนุมัติแล้ว' },
+  { id: 'customer_approved',label: 'ลูกค้า ✓' },
+  { id: 'invoiced',         label: 'ใบแจ้งหนี้' },
+  { id: 'paid',             label: '✅ ชำระแล้ว' },
 ]
 
 export default function QuotationsPage() {
@@ -63,23 +63,23 @@ export default function QuotationsPage() {
   const displayed = tab === 'all' ? quotations : quotations.filter(q => q.status === tab)
 
   const statData = [
-    { label: 'Total',    count: quotations.length,                                      color: '#8b91ab' },
-    { label: 'Pending',  count: pendingCount,                                            color: '#f59e0b' },
-    { label: 'Invoiced', count: quotations.filter(q => q.status === 'invoiced').length,  color: '#a78bfa' },
-    { label: 'Paid',     count: quotations.filter(q => q.status === 'paid').length,      color: '#4ade80' },
+    { label: 'ทั้งหมด',      count: quotations.length,                                      color: '#8b91ab' },
+    { label: 'รออนุมัติ',    count: pendingCount,                                            color: '#f59e0b' },
+    { label: 'ออกแล้ว',      count: quotations.filter(q => q.status === 'invoiced').length,  color: '#a78bfa' },
+    { label: 'ชำระแล้ว',     count: quotations.filter(q => q.status === 'paid').length,      color: '#4ade80' },
   ]
 
   return (
     <div style={s.page}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}><h1 style={s.title}>📄 Quotations</h1><a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a></div>
-          <p style={{ ...s.sub, marginBottom: 0 }}>견적서·인보이스·영수증을 관리합니다</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}><h1 style={s.title}>📄 ใบเสนอราคา</h1><a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a></div>
+          <p style={{ ...s.sub, marginBottom: 0 }}>จัดการใบเสนอราคา · ใบแจ้งหนี้ · ใบเสร็จ</p>
         </div>
         <button
           style={{ padding: '10px 22px', background: '#4f62f7', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
           onClick={() => router.push('/quotations/new')}>
-          + New Quotation
+          + ใบเสนอราคาใหม่
         </button>
       </div>
 
@@ -107,10 +107,10 @@ export default function QuotationsPage() {
         ))}
       </div>
 
-      {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>Loading...</div>}
+      {loading && <div style={{ textAlign: 'center', padding: 40, color: '#8b91ab' }}>กำลังโหลด...</div>}
       {!loading && displayed.length === 0 && (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 40, textAlign: 'center', color: '#8b91ab' }}>
-          No quotations found.
+          ไม่พบรายการ
         </div>
       )}
 
@@ -125,7 +125,7 @@ export default function QuotationsPage() {
 function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
   const st  = STATUS[q.status] || STATUS.draft
   const num = q.status === 'invoiced' || q.status === 'paid' ? (q.invoice_number || q.number) : q.number
-  const docLabel = q.status === 'paid' ? 'Receipt' : (q.status === 'invoiced' ? 'Invoice' : 'Quotation')
+  const docLabel = q.status === 'paid' ? 'ใบเสร็จ' : (q.status === 'invoiced' ? 'ใบแจ้งหนี้' : 'ใบเสนอราคา')
 
   const handleApprove = async (e) => {
     e.stopPropagation()
@@ -137,14 +137,14 @@ function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast.success('Approved!')
+      toast.success('อนุมัติแล้ว!')
       onRefresh()
     } catch (err) { toast.error(err.message) }
   }
 
   const handleReject = async (e) => {
     e.stopPropagation()
-    const reason = window.prompt('반려 사유를 입력해주세요:')
+    const reason = window.prompt('กรุณากรอกเหตุผลที่ปฏิเสธ:')
     if (reason === null) return
     try {
       const res = await fetch(`/api/quotations/${q.id}`, {
@@ -154,7 +154,7 @@ function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast.success('Rejected.')
+      toast.success('ปฏิเสธแล้ว')
       onRefresh()
     } catch (err) { toast.error(err.message) }
   }
@@ -181,7 +181,7 @@ function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
           </div>
           {isAdmin && (
             <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>
-              by {q.created_by_name}
+              โดย {q.created_by_name}
             </div>
           )}
           <div style={{ fontSize: 11, color: '#8b91ab', marginTop: 2 }}>
@@ -189,7 +189,7 @@ function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
           </div>
           {q.director_reject_reason && (
             <div style={{ fontSize: 11, color: '#f87171', marginTop: 3 }}>
-              반려 사유: {q.director_reject_reason}
+              เหตุผลที่ปฏิเสธ: {q.director_reject_reason}
             </div>
           )}
         </div>
@@ -201,11 +201,11 @@ function QuotationCard({ q, isAdmin, onRefresh, onClick }) {
             <div style={{ display: 'flex', gap: 6 }} onClick={e => e.stopPropagation()}>
               <button onClick={handleApprove}
                 style={{ padding: '4px 12px', background: 'rgba(74,222,128,0.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Approve
+                อนุมัติ
               </button>
               <button onClick={handleReject}
                 style={{ padding: '4px 12px', background: 'rgba(248,113,113,0.15)', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Reject
+                ปฏิเสธ
               </button>
             </div>
           )}

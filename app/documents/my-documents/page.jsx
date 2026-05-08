@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 
 const DOC_TYPES = {
-  'salary-certificate': '재직증명서 (หนังสือรับรองเงินเดือน)',
-  'payslip': '월급명세서 (สลิปเงินเดือน)',
+  'salary-certificate': 'หนังสือรับรองเงินเดือน',
+  'payslip': 'สลิปเงินเดือน',
 }
 
 export default function MyDocumentsPage() {
@@ -94,7 +94,7 @@ export default function MyDocumentsPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', color: '#8b91ab', padding: 40 }}>로딩 중...</div>
+        <div style={{ textAlign: 'center', color: '#8b91ab', padding: 40 }}>กำลังโหลด...</div>
       ) : filtered.length === 0 ? (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 48, textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>🗂️</div>
@@ -122,7 +122,7 @@ export default function MyDocumentsPage() {
 
               {doc.requestNote && (
                 <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 8 }}>
-                  메모: {doc.requestNote}
+                  บันทึก: {doc.requestNote}
                 </div>
               )}
 

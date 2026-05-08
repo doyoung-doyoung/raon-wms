@@ -49,7 +49,7 @@ export default function AttendancePage() {
       if (data.success) {
         await fetchRecords()
       } else {
-        alert(data.error || '출근 처리 실패')
+        alert(data.error || 'เช็คอินล้มเหลว')
       }
     } catch (e) { console.error(e) }
     setChecking(false)
@@ -67,7 +67,7 @@ export default function AttendancePage() {
       if (data.success) {
         await fetchRecords()
       } else {
-        alert(data.error || '퇴근 처리 실패')
+        alert(data.error || 'เช็คเอาต์ล้มเหลว')
       }
     } catch (e) { console.error(e) }
     setChecking(false)
@@ -97,7 +97,7 @@ export default function AttendancePage() {
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>ทั้งหมด {records.length} รายการ</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a>
           {/* 월 네비게이션 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1e2235', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '4px 8px' }}>
             <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: '#8b91ab', cursor: 'pointer', fontSize: 18, padding: '0 4px', lineHeight: 1 }}>‹</button>
@@ -116,20 +116,20 @@ export default function AttendancePage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
         }}>
           <div>
-            <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 4 }}>오늘 출퇴근 ({today})</div>
+            <div style={{ fontSize: 13, color: '#8b91ab', marginBottom: 4 }}>การลงเวลาวันนี้ ({today})</div>
             {todayRecord ? (
               <div>
                 <div style={{ fontSize: 15, color: '#4ade80', fontWeight: 600 }}>
-                  출근 {todayRecord.check_in}
+                  เข้างาน {todayRecord.check_in}
                 </div>
                 {todayRecord.check_out && (
                   <div style={{ fontSize: 15, color: '#f87171', fontWeight: 600, marginTop: 2 }}>
-                    퇴근 {todayRecord.check_out}
+                    ออกงาน {todayRecord.check_out}
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ fontSize: 15, color: '#8b91ab' }}>아직 출근 전입니다</div>
+              <div style={{ fontSize: 15, color: '#8b91ab' }}>ยังไม่ได้เข้างาน</div>
             )}
           </div>
 
@@ -147,7 +147,7 @@ export default function AttendancePage() {
                 fontFamily: 'inherit',
               }}
             >
-              {todayRecord ? '출근 완료' : checking ? '처리 중...' : '출근 체크'}
+              {todayRecord ? '✓ เข้างานแล้ว' : checking ? 'กำลังดำเนินการ...' : 'เข้างาน'}
             </button>
 
             <button
@@ -163,7 +163,7 @@ export default function AttendancePage() {
                 fontFamily: 'inherit',
               }}
             >
-              {todayRecord?.check_out ? '퇴근 완료' : checking ? '처리 중...' : '퇴근 체크'}
+              {todayRecord?.check_out ? '✓ ออกงานแล้ว' : checking ? 'กำลังดำเนินการ...' : 'ออกงาน'}
             </button>
           </div>
         </div>
@@ -173,12 +173,12 @@ export default function AttendancePage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#8b91ab' }}>
           <div style={{ width: 32, height: 32, border: '2px solid rgba(79,98,247,0.3)', borderTop: '2px solid #4f62f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          불러오는 중...
+          กำลังโหลด...
         </div>
       ) : records.length === 0 ? (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '60px 24px', textAlign: 'center', color: '#8b91ab' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 6 }}>출퇴근 기록이 없습니다</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 6 }}>ไม่มีบันทึกเวลา</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -195,7 +195,7 @@ export default function AttendancePage() {
                   background: record.check_out ? 'rgba(79,98,247,0.1)' : 'rgba(34,197,94,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
                 }}>
-                  {record.check_out ? '완' : '출'}
+                  {record.check_out ? '✓' : '▶'}
                 </div>
                 <div>
                   {isAdmin && (
@@ -205,32 +205,32 @@ export default function AttendancePage() {
                   )}
                   <div style={{ fontSize: 13, color: record.date === today ? '#818cf8' : '#8b91ab', fontWeight: record.date === today ? 600 : 400 }}>
                     {record.date}
-                    {record.date === today && <span style={{ marginLeft: 6, fontSize: 11, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '1px 6px', borderRadius: 4 }}>오늘</span>}
+                    {record.date === today && <span style={{ marginLeft: 6, fontSize: 11, background: 'rgba(79,98,247,0.2)', color: '#818cf8', padding: '1px 6px', borderRadius: 4 }}>วันนี้</span>}
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>출근</div>
+                  <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>เข้างาน</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: record.is_late === 'true' ? '#f59e0b' : '#4ade80' }}>
                       {record.check_in || '-'}
                     </span>
                     {record.is_late === 'true' && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>지각</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>มาสาย</span>
                     )}
                   </div>
                 </div>
                 <div style={{ color: '#8b91ab' }}>→</div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>퇴근</div>
+                  <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 2 }}>ออกงาน</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: record.check_out ? (record.is_early === 'true' ? '#f97316' : '#f87171') : '#8b91ab' }}>
                       {record.check_out || '-'}
                     </span>
                     {record.is_early === 'true' && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(249,115,22,0.15)', color: '#f97316' }}>조퇴</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'rgba(249,115,22,0.15)', color: '#f97316' }}>ออกก่อน</span>
                     )}
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default function AttendancePage() {
                 background: record.check_out ? 'rgba(79,98,247,0.1)' : 'rgba(34,197,94,0.1)',
                 color: record.check_out ? '#818cf8' : '#4ade80',
               }}>
-                {record.check_out ? '퇴근 완료' : '근무 중'}
+                {record.check_out ? 'เลิกงานแล้ว' : 'กำลังทำงาน'}
               </span>
             </div>
           ))}

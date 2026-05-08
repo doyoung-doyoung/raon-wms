@@ -7,12 +7,12 @@ import { useRouter, useParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 const STATUS_FLOW = [
-  { key: 'draft',             label: 'Draft',             color: '#8b91ab' },
-  { key: 'pending_director',  label: 'Pending Approval',  color: '#f59e0b' },
-  { key: 'approved',          label: 'Director Approved', color: '#4f62f7' },
-  { key: 'customer_approved', label: 'Customer Approved', color: '#06b6d4' },
-  { key: 'invoiced',          label: 'Invoice Issued',    color: '#a78bfa' },
-  { key: 'paid',              label: 'Paid',              color: '#4ade80' },
+  { key: 'draft',             label: 'ร่าง',               color: '#8b91ab' },
+  { key: 'pending_director',  label: 'รออนุมัติ',          color: '#f59e0b' },
+  { key: 'approved',          label: 'ผอ.อนุมัติ',         color: '#4f62f7' },
+  { key: 'customer_approved', label: 'ลูกค้าอนุมัติ',      color: '#06b6d4' },
+  { key: 'invoiced',          label: 'ออกแล้ว',            color: '#a78bfa' },
+  { key: 'paid',              label: 'ชำระแล้ว',           color: '#4ade80' },
 ]
 
 const STATUS_INFO = Object.fromEntries(
@@ -85,7 +85,7 @@ export default function QuotationDetailPage() {
       if (data.error) { toast.error(data.error); router.push('/quotations'); return }
       setQ(data)
       setEmailTo(data.client_email || '')
-    } catch (err) { toast.error('Failed to load'); }
+    } catch (err) { toast.error('โหลดข้อมูลล้มเหลว'); }
     finally { setLoading(false) }
   }, [id, router])
 
@@ -102,7 +102,7 @@ export default function QuotationDetailPage() {
   }
 
   const saveEdit = async () => {
-    if (!editClient.name.trim()) { toast.error('Client name is required.'); return }
+    if (!editClient.name.trim()) { toast.error('กรุณากรอกชื่อบริษัท'); return }
     setActing(true)
     try {
       const tot = calcTotals(editItems.filter(it => it.name.trim()), editMgmt, q.client_type)
@@ -125,7 +125,7 @@ export default function QuotationDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast.success('Saved!')
+      toast.success('บันทึกแล้ว!')
       setEditing(false)
       fetchQ()
     } catch (err) { toast.error(err.message) }
@@ -142,7 +142,7 @@ export default function QuotationDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Action failed')
-      toast.success('Done!')
+      toast.success('ดำเนินการแล้ว!')
       setModal(null)
       fetchQ()
     } catch (err) { toast.error(err.message) }
@@ -169,7 +169,7 @@ export default function QuotationDetailPage() {
   }
 
   const sendEmail = async () => {
-    if (!emailTo.trim()) { toast.error('Email address required'); return }
+    if (!emailTo.trim()) { toast.error('กรุณากรอกอีเมล'); return }
     setActing(true)
     try {
       const res  = await fetch(`/api/quotations/${id}`, {
@@ -179,7 +179,7 @@ export default function QuotationDetailPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast.success(`Email sent to ${emailTo}!`)
+      toast.success(`ส่งอีเมลถึง ${emailTo} แล้ว!`)
       setModal(null)
     } catch (err) { toast.error(err.message) }
     finally { setActing(false) }
@@ -201,14 +201,14 @@ export default function QuotationDetailPage() {
   const addEditItem   = () => setEditItems(prev => [...prev, { ...EMPTY_ITEM, details: [''] }])
   const removeEditItem = (idx) => setEditItems(prev => prev.filter((_, i) => i !== idx))
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 80, color: '#8b91ab' }}>Loading...</div>
+  if (loading) return <div style={{ textAlign: 'center', padding: 80, color: '#8b91ab' }}>กำลังโหลด...</div>
   if (!q) return null
 
   const isAdmin   = session?.isAdmin
   const isMine    = q.created_by_email === session?.user?.email
   const stInfo    = STATUS_INFO[q.status] || STATUS_INFO.draft
   const docType   = q.status === 'paid' ? 'receipt' : q.status === 'invoiced' ? 'invoice' : 'quotation'
-  const docLabel  = { quotation: 'Quotation', invoice: 'Invoice', receipt: 'Receipt' }[docType]
+  const docLabel  = { quotation: 'ใบเสนอราคา', invoice: 'ใบแจ้งหนี้', receipt: 'ใบเสร็จ' }[docType]
   const docNum    = docType === 'quotation' ? q.number : (q.invoice_number || q.number)
   const isDomestic= q.client_type === 'domestic'
 
@@ -220,7 +220,7 @@ export default function QuotationDetailPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <button style={{ ...s.btnSm('rgba(255,255,255,0.06)', '#8b91ab'), marginBottom: 10 }}
-            onClick={() => router.push('/quotations')}>← Back</button>
+            onClick={() => router.push('/quotations')}>← กลับ</button>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>
             {docLabel} <span style={{ color: '#8b91ab', fontWeight: 400 }}>{docNum}</span>
           </h1>
@@ -266,71 +266,64 @@ export default function QuotationDetailPage() {
           })}
         </div>
         {q.status === 'cancelled' && (
-          <div style={{ textAlign: 'center', color: '#f87171', fontSize: 12, marginTop: 8 }}>This document has been cancelled.</div>
+          <div style={{ textAlign: 'center', color: '#f87171', fontSize: 12, marginTop: 8 }}>เอกสารนี้ถูกยกเลิกแล้ว</div>
         )}
       </div>
 
       {/* ── Action Buttons ── */}
       {!editing && (
         <div style={{ ...s.card, padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#8b91ab', marginBottom: 12 }}>Actions</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#8b91ab', marginBottom: 12 }}>การดำเนินการ</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {/* Edit */}
             {q.status === 'draft' && (isMine || isAdmin) && (
-              <button style={s.btn('rgba(79,98,247,0.15)', '#818cf8')} onClick={startEdit}>✏ Edit</button>
+              <button style={s.btn('rgba(79,98,247,0.15)', '#818cf8')} onClick={startEdit}>✏ แก้ไข</button>
             )}
-            {/* Submit for approval */}
             {q.status === 'draft' && (isMine || isAdmin) && (
               <button style={s.btn('rgba(245,158,11,0.15)', '#fbbf24')}
-                onClick={() => { if (window.confirm('이사에게 승인을 요청할까요?')) doAction('request_approval') }}>
-                📩 Submit for Director Approval
+                onClick={() => { if (window.confirm('ส่งขออนุมัติจากผู้อำนวยการ?')) doAction('request_approval') }}>
+                📩 ส่งให้ผู้อำนวยการอนุมัติ
               </button>
             )}
-            {/* Director approve/reject */}
             {q.status === 'pending_director' && isAdmin && (
               <>
                 <button style={s.btn('rgba(74,222,128,0.15)', '#4ade80')}
-                  onClick={() => { if (window.confirm('승인하시겠습니까?')) doAction('director_approve') }}>
-                  ✅ Approve
+                  onClick={() => { if (window.confirm('ยืนยันการอนุมัติ?')) doAction('director_approve') }}>
+                  ✅ อนุมัติ
                 </button>
                 <button style={s.btn('rgba(248,113,113,0.15)', '#f87171')}
                   onClick={() => setModal('reject')}>
-                  ❌ Reject
+                  ❌ ปฏิเสธ
                 </button>
               </>
             )}
-            {/* Customer approved */}
             {q.status === 'approved' && (isMine || isAdmin) && (
               <button style={s.btn('rgba(6,182,212,0.15)', '#22d3ee')}
-                onClick={() => { if (window.confirm('고객이 견적서를 승인했습니까?')) doAction('customer_approve') }}>
-                🤝 Customer Approved
+                onClick={() => { if (window.confirm('ลูกค้าอนุมัติใบเสนอราคาแล้ว?')) doAction('customer_approve') }}>
+                🤝 ลูกค้าอนุมัติ
               </button>
             )}
-            {/* Convert to invoice */}
             {q.status === 'customer_approved' && (isMine || isAdmin) && (
               <button style={s.btn('#4f62f7', '#fff')}
-                onClick={() => { if (window.confirm('인보이스를 발행할까요?')) doAction('to_invoice') }}>
-                📋 Issue Invoice
+                onClick={() => { if (window.confirm('ออกใบแจ้งหนี้?')) doAction('to_invoice') }}>
+                📋 ออกใบแจ้งหนี้
               </button>
             )}
-            {/* Mark paid */}
             {q.status === 'invoiced' && (isMine || isAdmin) && (
               <button style={s.btn('rgba(74,222,128,0.15)', '#4ade80')}
                 onClick={() => setModal('paid')}>
-                💰 Mark as Paid → Receipt
+                💰 ยืนยันชำระเงิน → ใบเสร็จ
               </button>
             )}
-            {/* Cancel */}
             {!['paid', 'cancelled'].includes(q.status) && (isMine || isAdmin) && (
               <button style={s.btn('rgba(248,113,113,0.08)', '#f87171')}
-                onClick={() => { if (window.confirm('이 견적서를 취소할까요?')) doAction('cancel') }}>
-                Cancel
+                onClick={() => { if (window.confirm('ยกเลิกใบเสนอราคานี้?')) doAction('cancel') }}>
+                ยกเลิก
               </button>
             )}
           </div>
           {q.director_reject_reason && (
             <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(248,113,113,0.08)', borderRadius: 6, fontSize: 12, color: '#f87171' }}>
-              반려 사유: {q.director_reject_reason}
+              เหตุผลที่ปฏิเสธ: {q.director_reject_reason}
             </div>
           )}
         </div>
@@ -350,7 +343,7 @@ export default function QuotationDetailPage() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, background: q.client_type === 'domestic' ? 'rgba(79,98,247,0.15)' : 'rgba(245,158,11,0.15)', color: q.client_type === 'domestic' ? '#818cf8' : '#fbbf24', fontWeight: 600 }}>
-                  {q.client_type === 'domestic' ? '🇹🇭 Thailand' : '🌍 International'}
+                  {q.client_type === 'domestic' ? '🇹🇭 ในประเทศ' : '🌍 ต่างประเทศ'}
                 </span>
                 <span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, background: 'rgba(255,255,255,0.06)', color: '#f1f3f9', fontWeight: 600 }}>
                   {q.currency}
@@ -360,29 +353,29 @@ export default function QuotationDetailPage() {
 
             {/* Client info */}
             <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 8, fontWeight: 600 }}>CLIENT</div>
+              <div style={{ fontSize: 11, color: '#8b91ab', marginBottom: 8, fontWeight: 600 }}>ลูกค้า</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 20px' }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: '#f1f3f9', gridColumn: '1 / -1' }}>{q.client_name}</div>
                 {q.client_address && <div style={{ fontSize: 12, color: '#8b91ab' }}>📍 {q.client_address}</div>}
                 {q.client_email   && <div style={{ fontSize: 12, color: '#8b91ab' }}>✉ {q.client_email}</div>}
                 {q.client_tel     && <div style={{ fontSize: 12, color: '#8b91ab' }}>📞 {q.client_tel}</div>}
-                {q.client_tax_id  && <div style={{ fontSize: 12, color: '#8b91ab' }}>🪪 Tax ID: {q.client_tax_id}</div>}
+                {q.client_tax_id  && <div style={{ fontSize: 12, color: '#8b91ab' }}>🪪 เลขผู้เสียภาษี: {q.client_tax_id}</div>}
               </div>
             </div>
 
             {/* Items Table */}
             <div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 80px 100px', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600 }}>DETAIL</span>
-                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'center' }}>UNIT</span>
-                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'right' }}>COST</span>
-                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'right' }}>TOTAL</span>
+                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600 }}>รายละเอียด</span>
+                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'center' }}>จำนวน</span>
+                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'right' }}>ราคาต่อหน่วย</span>
+                <span style={{ fontSize: 11, color: '#8b91ab', fontWeight: 600, textAlign: 'right' }}>รวม</span>
               </div>
               {(q.items || []).map((item, idx) => (
                 <div key={idx} style={{ marginBottom: 8 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 80px 100px', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9' }}>{item.name}</span>
-                    <span style={{ fontSize: 12, color: '#8b91ab', textAlign: 'center' }}>{item.qty} Set</span>
+                    <span style={{ fontSize: 12, color: '#8b91ab', textAlign: 'center' }}>{item.qty} ชุด</span>
                     <span style={{ fontSize: 12, color: '#8b91ab', textAlign: 'right' }}>{fmt(item.unitPrice)}</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#f1f3f9', textAlign: 'right' }}>{fmt(item.total)}</span>
                   </div>
@@ -393,7 +386,7 @@ export default function QuotationDetailPage() {
               ))}
               {Number(q.management_fee_rate) > 0 && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 80px 100px', gap: 8, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontSize: 12, color: '#8b91ab' }}>Management Fee ({q.management_fee_rate}%)</span>
+                  <span style={{ fontSize: 12, color: '#8b91ab' }}>ค่าบริหารจัดการ ({q.management_fee_rate}%)</span>
                   <span /><span />
                   <span style={{ fontSize: 12, color: '#8b91ab', textAlign: 'right' }}>{fmt(q.management_fee_amount)}</span>
                 </div>
@@ -404,7 +397,7 @@ export default function QuotationDetailPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
               <div style={{ minWidth: 280 }}>
                 <div style={s.totRow}>
-                  <span style={{ fontSize: 13, color: '#8b91ab' }}>Total Amount (A)</span>
+                  <span style={{ fontSize: 13, color: '#8b91ab' }}>ยอดรวม (A)</span>
                   <span style={{ fontSize: 13, color: '#f1f3f9', fontWeight: 600 }}>{fmt(q.subtotal)} {q.currency}</span>
                 </div>
                 {isDomestic && (
@@ -414,18 +407,18 @@ export default function QuotationDetailPage() {
                       <span style={{ fontSize: 12, color: '#8b91ab' }}>{fmt(q.vat_amount)} {q.currency}</span>
                     </div>
                     <div style={s.totRow}>
-                      <span style={{ fontSize: 12, color: '#8b91ab' }}>WHT 3% (C)</span>
+                      <span style={{ fontSize: 12, color: '#8b91ab' }}>ภาษีหัก ณ ที่จ่าย 3% (C)</span>
                       <span style={{ fontSize: 12, color: '#f87171' }}>− {fmt(q.wht_amount)} {q.currency}</span>
                     </div>
                     <div style={s.totGT}>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9' }}>Grand Total (A+B−C)</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9' }}>ยอดสุทธิ (A+B−C)</span>
                       <span style={{ fontSize: 15, fontWeight: 700, color: '#4ade80' }}>{fmt(q.grand_total)} {q.currency}</span>
                     </div>
                   </>
                 )}
                 {!isDomestic && (
                   <div style={s.totGT}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9' }}>Grand Total</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9' }}>ยอดสุทธิ</span>
                     <span style={{ fontSize: 15, fontWeight: 700, color: '#4ade80' }}>{fmt(q.grand_total)} {q.currency}</span>
                   </div>
                 )}
@@ -433,7 +426,7 @@ export default function QuotationDetailPage() {
             </div>
             {q.remark && (
               <div style={{ marginTop: 12, fontSize: 12, color: '#8b91ab' }}>
-                <strong style={{ color: '#f1f3f9' }}>Remark:</strong> {q.remark}
+                <strong style={{ color: '#f1f3f9' }}>หมายเหตุ:</strong> {q.remark}
               </div>
             )}
           </div>
@@ -441,13 +434,13 @@ export default function QuotationDetailPage() {
           {/* Meta */}
           <div style={{ ...s.card, padding: '14px 20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px 20px' }}>
-              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Created by</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.created_by_name}</div></div>
-              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Created</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.created_at)}</div></div>
-              {q.director_approved_at && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Director Approved</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.director_approved_at)}</div></div>}
-              {q.invoiced_at && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Invoice Issued</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.invoiced_at)}</div></div>}
-              {q.paid_at     && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Paid</span><div style={{ fontSize: 13, color: '#4ade80' }}>{fmtDate(q.paid_at)}</div></div>}
-              {q.paid_note   && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Payment Note</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.paid_note}</div></div>}
-              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>Payment Terms</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.payment_days} days</div></div>
+              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>สร้างโดย</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.created_by_name}</div></div>
+              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>สร้างเมื่อ</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.created_at)}</div></div>
+              {q.director_approved_at && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>ผอ.อนุมัติเมื่อ</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.director_approved_at)}</div></div>}
+              {q.invoiced_at && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>ออกใบแจ้งหนี้เมื่อ</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{fmtDate(q.invoiced_at)}</div></div>}
+              {q.paid_at     && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>ชำระเมื่อ</span><div style={{ fontSize: 13, color: '#4ade80' }}>{fmtDate(q.paid_at)}</div></div>}
+              {q.paid_note   && <div><span style={{ fontSize: 11, color: '#8b91ab' }}>บันทึกการชำระ</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.paid_note}</div></div>}
+              <div><span style={{ fontSize: 11, color: '#8b91ab' }}>เงื่อนไขการชำระ</span><div style={{ fontSize: 13, color: '#f1f3f9' }}>{q.payment_days} วัน</div></div>
             </div>
           </div>
         </>
@@ -457,54 +450,52 @@ export default function QuotationDetailPage() {
       {editing && (
         <div>
           <div style={{ ...s.card, borderColor: 'rgba(79,98,247,0.3)' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#818cf8', marginBottom: 16 }}>✏ Editing Quotation</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#818cf8', marginBottom: 16 }}>✏ แก้ไขใบเสนอราคา</div>
 
-            {/* Client */}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 10 }}>CLIENT INFO</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 10 }}>ข้อมูลลูกค้า</div>
             <div style={s.grid2}>
               <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-                <label style={s.lbl}>Company Name</label>
+                <label style={s.lbl}>ชื่อบริษัท</label>
                 <input style={s.inp} value={editClient.name} onChange={e => setEditClient(c => ({ ...c, name: e.target.value }))} />
               </div>
               <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-                <label style={s.lbl}>Address</label>
+                <label style={s.lbl}>ที่อยู่</label>
                 <input style={s.inp} value={editClient.address} onChange={e => setEditClient(c => ({ ...c, address: e.target.value }))} />
               </div>
               {q.client_type === 'domestic' && (
                 <div style={{ gridColumn: '1 / -1', marginBottom: 12 }}>
-                  <label style={s.lbl}>Tax ID</label>
+                  <label style={s.lbl}>เลขประจำตัวผู้เสียภาษี</label>
                   <input style={s.inp} value={editClient.taxId} onChange={e => setEditClient(c => ({ ...c, taxId: e.target.value }))} />
                 </div>
               )}
               <div style={{ marginBottom: 12 }}>
-                <label style={s.lbl}>Email</label>
+                <label style={s.lbl}>อีเมล</label>
                 <input style={s.inp} value={editClient.email} onChange={e => setEditClient(c => ({ ...c, email: e.target.value }))} />
               </div>
               <div style={{ marginBottom: 12 }}>
-                <label style={s.lbl}>Tel</label>
+                <label style={s.lbl}>โทรศัพท์</label>
                 <input style={s.inp} value={editClient.tel} onChange={e => setEditClient(c => ({ ...c, tel: e.target.value }))} />
               </div>
             </div>
 
-            {/* Items */}
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 10, marginTop: 8 }}>ITEMS</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 10, marginTop: 8 }}>รายการ</div>
             {editItems.map((item, idx) => (
               <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, padding: 14, marginBottom: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 12, color: '#f1f3f9', fontWeight: 600 }}>Item {idx + 1}</span>
-                  {editItems.length > 1 && <button style={s.btnSm('rgba(248,113,113,0.1)', '#f87171')} onClick={() => removeEditItem(idx)}>Remove</button>}
+                  <span style={{ fontSize: 12, color: '#f1f3f9', fontWeight: 600 }}>รายการที่ {idx + 1}</span>
+                  {editItems.length > 1 && <button style={s.btnSm('rgba(248,113,113,0.1)', '#f87171')} onClick={() => removeEditItem(idx)}>ลบ</button>}
                 </div>
                 <div style={{ marginBottom: 8 }}>
-                  <label style={s.lbl}>Name</label>
+                  <label style={s.lbl}>ชื่อบริการ</label>
                   <input style={s.inp} value={item.name} onChange={e => updateEditItem(idx, 'name', e.target.value)} />
                 </div>
                 <div style={s.grid3}>
-                  <div><label style={s.lbl}>Qty</label><input type="number" style={s.numInp} value={item.qty} onChange={e => updateEditItem(idx, 'qty', e.target.value)} /></div>
-                  <div><label style={s.lbl}>Unit Price</label><input type="number" style={s.numInp} value={item.unitPrice} onChange={e => updateEditItem(idx, 'unitPrice', e.target.value)} /></div>
-                  <div><label style={s.lbl}>Total</label><div style={{ padding: '9px 13px', background: 'rgba(79,98,247,0.08)', borderRadius: 8, color: '#a5b4fc', fontSize: 13, fontWeight: 600 }}>{fmt(item.total)}</div></div>
+                  <div><label style={s.lbl}>จำนวน</label><input type="number" style={s.numInp} value={item.qty} onChange={e => updateEditItem(idx, 'qty', e.target.value)} /></div>
+                  <div><label style={s.lbl}>ราคาต่อหน่วย</label><input type="number" style={s.numInp} value={item.unitPrice} onChange={e => updateEditItem(idx, 'unitPrice', e.target.value)} /></div>
+                  <div><label style={s.lbl}>รวม</label><div style={{ padding: '9px 13px', background: 'rgba(79,98,247,0.08)', borderRadius: 8, color: '#a5b4fc', fontSize: 13, fontWeight: 600 }}>{fmt(item.total)}</div></div>
                 </div>
                 <div style={{ marginTop: 8 }}>
-                  <label style={{ ...s.lbl, marginBottom: 6 }}>Details</label>
+                  <label style={{ ...s.lbl, marginBottom: 6 }}>รายละเอียด</label>
                   {item.details.map((d, di) => (
                     <div key={di} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
                       <span style={{ color: '#8b91ab', paddingTop: 9 }}>–</span>
@@ -512,20 +503,19 @@ export default function QuotationDetailPage() {
                       <button style={s.btnSm('transparent', '#8b91ab')} onClick={() => removeEditDetail(idx, di)}>×</button>
                     </div>
                   ))}
-                  {item.details.length < 12 && <button style={s.btnSm('rgba(255,255,255,0.04)', '#8b91ab')} onClick={() => addEditDetailRow(idx)}>+ Add Detail</button>}
+                  {item.details.length < 12 && <button style={s.btnSm('rgba(255,255,255,0.04)', '#8b91ab')} onClick={() => addEditDetailRow(idx)}>+ เพิ่มรายละเอียด</button>}
                 </div>
               </div>
             ))}
-            <button style={s.btnSm('#4f62f7', '#fff')} onClick={addEditItem}>+ Add Item</button>
+            <button style={s.btnSm('#4f62f7', '#fff')} onClick={addEditItem}>+ เพิ่มรายการ</button>
 
-            {/* Fee */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginTop: 14 }}>
-              <div><label style={s.lbl}>Management Fee (%)</label><input type="number" style={s.numInp} value={editMgmt} onChange={e => setEditMgmt(e.target.value)} /></div>
-              <div><label style={s.lbl}>Payment Days</label><input type="number" style={s.numInp} value={editPayDays} onChange={e => setEditPayDays(e.target.value)} /></div>
+              <div><label style={s.lbl}>ค่าบริหารจัดการ (%)</label><input type="number" style={s.numInp} value={editMgmt} onChange={e => setEditMgmt(e.target.value)} /></div>
+              <div><label style={s.lbl}>กำหนดชำระ (วัน)</label><input type="number" style={s.numInp} value={editPayDays} onChange={e => setEditPayDays(e.target.value)} /></div>
               <div />
             </div>
             <div style={{ marginTop: 12 }}>
-              <label style={s.lbl}>Remark</label>
+              <label style={s.lbl}>หมายเหตุ</label>
               <textarea style={{ ...s.inp, height: 60, resize: 'vertical' }} value={editRemark} onChange={e => setEditRemark(e.target.value)} />
             </div>
 
@@ -533,20 +523,20 @@ export default function QuotationDetailPage() {
             {editTot && (
               <div style={{ marginTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }}>
                 <div style={{ maxWidth: 280 }}>
-                  <div style={s.totRow}><span style={{ color: '#8b91ab', fontSize: 12 }}>Total Amount (A)</span><span style={{ color: '#f1f3f9', fontSize: 12 }}>{fmt(editTot.subtotal)}</span></div>
+                  <div style={s.totRow}><span style={{ color: '#8b91ab', fontSize: 12 }}>ยอดรวม (A)</span><span style={{ color: '#f1f3f9', fontSize: 12 }}>{fmt(editTot.subtotal)}</span></div>
                   {isDomestic && <>
                     <div style={s.totRow}><span style={{ color: '#8b91ab', fontSize: 12 }}>VAT 7% (B)</span><span style={{ color: '#8b91ab', fontSize: 12 }}>{fmt(editTot.vatAmount)}</span></div>
-                    <div style={s.totRow}><span style={{ color: '#8b91ab', fontSize: 12 }}>WHT 3% (C)</span><span style={{ color: '#f87171', fontSize: 12 }}>− {fmt(editTot.whtAmount)}</span></div>
+                    <div style={s.totRow}><span style={{ color: '#8b91ab', fontSize: 12 }}>ภาษีหัก ณ ที่จ่าย 3% (C)</span><span style={{ color: '#f87171', fontSize: 12 }}>− {fmt(editTot.whtAmount)}</span></div>
                   </>}
-                  <div style={s.totGT}><span style={{ color: '#f1f3f9', fontSize: 14, fontWeight: 700 }}>Grand Total</span><span style={{ color: '#4ade80', fontSize: 14, fontWeight: 700 }}>{fmt(editTot.grandTotal)} {q.currency}</span></div>
+                  <div style={s.totGT}><span style={{ color: '#f1f3f9', fontSize: 14, fontWeight: 700 }}>ยอดสุทธิ</span><span style={{ color: '#4ade80', fontSize: 14, fontWeight: 700 }}>{fmt(editTot.grandTotal)} {q.currency}</span></div>
                 </div>
               </div>
             )}
 
             <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
-              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setEditing(false)}>Cancel</button>
+              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setEditing(false)}>ยกเลิก</button>
               <button style={{ ...s.btn('#4f62f7', '#fff'), opacity: acting ? 0.6 : 1 }} onClick={saveEdit} disabled={acting}>
-                {acting ? 'Saving...' : '💾 Save Changes'}
+                {acting ? 'กำลังบันทึก...' : '💾 บันทึกการแก้ไข'}
               </button>
             </div>
           </div>
@@ -557,16 +547,16 @@ export default function QuotationDetailPage() {
       {modal === 'email' && (
         <div style={s.overlay} onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div style={s.modal}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>✉ Send {docLabel} by Email</div>
-            <label style={s.lbl}>Recipient Email</label>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>✉ ส่ง{docLabel}ทางอีเมล</div>
+            <label style={s.lbl}>อีเมลผู้รับ</label>
             <input style={{ ...s.inp, marginBottom: 16 }} type="email" value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="client@example.com" />
             <div style={{ fontSize: 12, color: '#8b91ab', marginBottom: 16 }}>
-              The {docLabel} PDF will be attached to the email.
+              ไฟล์ PDF จะถูกแนบในอีเมล
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>Cancel</button>
+              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>ยกเลิก</button>
               <button style={{ ...s.btn('#4f62f7', '#fff'), opacity: acting ? 0.6 : 1 }} onClick={sendEmail} disabled={acting}>
-                {acting ? 'Sending...' : 'Send Email'}
+                {acting ? 'กำลังส่ง...' : 'ส่งอีเมล'}
               </button>
             </div>
           </div>
@@ -576,18 +566,18 @@ export default function QuotationDetailPage() {
       {modal === 'paid' && (
         <div style={s.overlay} onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div style={s.modal}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>💰 Mark as Paid</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>💰 ยืนยันการชำระเงิน</div>
             <div style={{ background: 'rgba(74,222,128,0.08)', borderRadius: 8, padding: '12px 16px', marginBottom: 14, fontSize: 13 }}>
-              <div style={{ color: '#f1f3f9', fontWeight: 600 }}>Amount: {fmt(q.grand_total)} {q.currency}</div>
-              <div style={{ color: '#8b91ab', fontSize: 12, marginTop: 2 }}>This will generate a Receipt.</div>
+              <div style={{ color: '#f1f3f9', fontWeight: 600 }}>ยอดชำระ: {fmt(q.grand_total)} {q.currency}</div>
+              <div style={{ color: '#8b91ab', fontSize: 12, marginTop: 2 }}>ระบบจะออกใบเสร็จอัตโนมัติ</div>
             </div>
-            <label style={s.lbl}>Payment Note (optional)</label>
-            <input style={{ ...s.inp, marginBottom: 16 }} value={paidNote} onChange={e => setPaidNote(e.target.value)} placeholder="e.g. Bank transfer confirmed" />
+            <label style={s.lbl}>บันทึกการชำระ (ไม่บังคับ)</label>
+            <input style={{ ...s.inp, marginBottom: 16 }} value={paidNote} onChange={e => setPaidNote(e.target.value)} placeholder="เช่น โอนธนาคารแล้ว" />
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>Cancel</button>
+              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>ยกเลิก</button>
               <button style={{ ...s.btn('rgba(74,222,128,0.2)', '#4ade80'), opacity: acting ? 0.6 : 1 }}
                 onClick={() => doAction('paid', { paidNote })} disabled={acting}>
-                {acting ? 'Processing...' : '✅ Confirm Payment'}
+                {acting ? 'กำลังดำเนินการ...' : '✅ ยืนยันการชำระ'}
               </button>
             </div>
           </div>
@@ -597,15 +587,15 @@ export default function QuotationDetailPage() {
       {modal === 'reject' && (
         <div style={s.overlay} onClick={e => e.target === e.currentTarget && setModal(null)}>
           <div style={s.modal}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>❌ Reject Quotation</div>
-            <label style={s.lbl}>Rejection Reason</label>
+            <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 16 }}>❌ ปฏิเสธใบเสนอราคา</div>
+            <label style={s.lbl}>เหตุผลที่ปฏิเสธ</label>
             <textarea style={{ ...s.inp, height: 80, resize: 'vertical', marginBottom: 16 }}
-              value={rejectR} onChange={e => setRejectR(e.target.value)} placeholder="Enter reason for rejection..." />
+              value={rejectR} onChange={e => setRejectR(e.target.value)} placeholder="กรอกเหตุผล..." />
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>Cancel</button>
+              <button style={s.btn('rgba(255,255,255,0.06)', '#8b91ab')} onClick={() => setModal(null)}>ยกเลิก</button>
               <button style={{ ...s.btn('rgba(248,113,113,0.15)', '#f87171'), opacity: acting ? 0.6 : 1 }}
                 onClick={() => doAction('director_reject', { reason: rejectR })} disabled={acting}>
-                {acting ? 'Processing...' : 'Reject'}
+                {acting ? 'กำลังดำเนินการ...' : 'ปฏิเสธ'}
               </button>
             </div>
           </div>

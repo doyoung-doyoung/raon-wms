@@ -44,7 +44,7 @@ export default function AnnouncementsPage() {
         setShowForm(false)
         await fetchAnnouncements()
       } else {
-        alert(data.error || '등록 실패')
+        alert(data.error || 'บันทึกล้มเหลว')
       }
     } catch (e) { console.error(e) }
     setSaving(false)
@@ -81,7 +81,7 @@ export default function AnnouncementsPage() {
           <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{announcements.length} รายการ</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a>
           {isAdmin && (
           <button
             onClick={() => { setShowForm(true); setSelected(null) }}
@@ -153,7 +153,7 @@ export default function AnnouncementsPage() {
                   <div style={{ fontSize: 12, color: '#8b91ab', flexShrink: 0, textAlign: 'right' }}>
                     <div>{item.author}</div>
                     <div style={{ marginTop: 2 }}>{item.createdAt}</div>
-                    {isAdmin && (() => { const cnt = JSON.parse(item.confirmed_by || '[]').length; return cnt > 0 ? <div style={{ marginTop: 3, color: '#4ade80', fontWeight: 600 }}>✓ {cnt}명 확인</div> : null })()}
+                    {isAdmin && (() => { const cnt = JSON.parse(item.confirmed_by || '[]').length; return cnt > 0 ? <div style={{ marginTop: 3, color: '#4ade80', fontWeight: 600 }}>✓ {cnt} คน ยืนยัน</div> : null })()}
                   </div>
                 </div>
               </div>
@@ -185,9 +185,9 @@ export default function AnnouncementsPage() {
                 const confirmed = JSON.parse(selected.confirmed_by || '[]')
                 return (
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 8 }}>✓ 확인한 직원 ({confirmed.length}명)</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#8b91ab', marginBottom: 8 }}>✓ พนักงานที่ยืนยัน ({confirmed.length} คน)</div>
                     {confirmed.length === 0
-                      ? <div style={{ fontSize: 12, color: '#555' }}>아직 확인한 직원이 없습니다</div>
+                      ? <div style={{ fontSize: 12, color: '#555' }}>ยังไม่มีพนักงานยืนยัน</div>
                       : confirmed.map((c, i) => (
                         <div key={i} style={{ fontSize: 12, color: '#8b91ab', marginBottom: 3 }}>
                           {c.name || c.email} — {c.confirmedAt?.slice(0, 16).replace('T', ' ')}

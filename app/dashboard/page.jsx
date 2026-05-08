@@ -251,7 +251,7 @@ export default function DashboardPage() {
                 หนังสือเตือน ({myWarnings.length} ครั้ง)
               </div>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#f1f3f9', marginBottom: 4 }}>
-                {['1차', '2차', '3차'][myWarnings[0].warning_number - 1] || `${myWarnings[0].warning_number}차`} 경고장
+                หนังสือเตือน ครั้งที่ {myWarnings[0].warning_number}
               </div>
               <div style={{ fontSize: 12, color: '#8b91ab', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {myWarnings[0].reason1 || myWarnings[0].reason}

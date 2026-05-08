@@ -109,9 +109,9 @@ export default function WarningsPage() {
   }
 
   const severityColor = (num) => {
-    if (num === 1) return { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#fbbf24', label: '1차 경고' }
-    if (num === 2) return { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', text: '#f87171', label: '2차 경고' }
-    return { bg: 'rgba(139,0,0,0.15)', border: 'rgba(239,68,68,0.5)', text: '#fca5a5', label: `${num}차 경고` }
+    if (num === 1) return { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#fbbf24', label: 'เตือนครั้งที่ 1' }
+    if (num === 2) return { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', text: '#f87171', label: 'เตือนครั้งที่ 2' }
+    return { bg: 'rgba(139,0,0,0.15)', border: 'rgba(239,68,68,0.5)', text: '#fca5a5', label: `เตือนครั้งที่ ${num}` }
   }
 
   const visibleWarnings = isAdmin
@@ -124,12 +124,12 @@ export default function WarningsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f1f3f9', margin: 0 }}>
-            {isAdmin ? '경고장 관리' : '나의 경고장'}
+            {isAdmin ? '경고장 관리' : 'หนังสือเตือนของฉัน'}
           </h1>
-          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>총 {visibleWarnings.length}건</p>
+          <p style={{ color: '#8b91ab', fontSize: 13, marginTop: 4 }}>{isAdmin ? `총 ${visibleWarnings.length}건` : `ทั้งหมด ${visibleWarnings.length} ครั้ง`}</p>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 홈</a>
+          <a href="/dashboard" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#8b91ab', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>🏠 หน้าหลัก</a>
           {isAdmin && (
           <div style={{ display: 'flex', gap: 10 }}>
             <button
@@ -168,10 +168,10 @@ export default function WarningsPage() {
           <span style={{ fontSize: 20 }}>⚠️</span>
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#f87171' }}>
-              총 {visibleWarnings.length}건의 경고장이 있습니다
+              มีหนังสือเตือนทั้งหมด {visibleWarnings.length} ฉบับ
             </div>
             <div style={{ fontSize: 12, color: '#8b91ab', marginTop: 2 }}>
-              경고장을 확인하고 확인 완료 버튼을 눌러주세요
+              กรุณาอ่านหนังสือเตือนและกดปุ่มยืนยัน
             </div>
           </div>
         </div>
@@ -181,13 +181,13 @@ export default function WarningsPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: '#8b91ab' }}>
           <div style={{ width: 32, height: 32, border: '2px solid rgba(79,98,247,0.3)', borderTop: '2px solid #4f62f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          불러오는 중...
+          กำลังโหลด...
         </div>
       ) : visibleWarnings.length === 0 ? (
         <div style={{ background: '#141828', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '60px 24px', textAlign: 'center', color: '#8b91ab' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f3f9', marginBottom: 6 }}>
-            {isAdmin ? '발행된 경고장이 없습니다.' : '경고장이 없습니다!'}
+            {isAdmin ? '발행된 경고장이 없습니다.' : 'ไม่มีหนังสือเตือน!'}
           </div>
         </div>
       ) : (
@@ -217,7 +217,7 @@ export default function WarningsPage() {
                         color: w.status === 'acknowledged' ? '#4ade80' : '#fbbf24',
                         border: `1px solid ${w.status === 'acknowledged' ? 'rgba(34,197,94,0.2)' : 'rgba(245,158,11,0.2)'}`,
                       }}>
-                        {w.status === 'acknowledged' ? '확인 완료' : '미확인'}
+                        {w.status === 'acknowledged' ? 'รับทราบแล้ว' : 'ยังไม่ได้รับทราบ'}
                       </span>
                     </div>
                     {isAdmin && (
@@ -239,12 +239,12 @@ export default function WarningsPage() {
                 {active && (
                   <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                     {[
-                      { label: '직원', value: w.employee_name },
-                      { label: '직책', value: w.position },
-                      { label: '사유 1', value: w.reason1 },
-                      { label: '사유 2', value: w.reason2 },
-                      { label: '발행일', value: w.issued_at },
-                      { label: '담당자', value: w.director_name },
+                      { label: 'พนักงาน', value: w.employee_name },
+                      { label: 'ตำแหน่ง', value: w.position },
+                      { label: 'เหตุผล 1', value: w.reason1 },
+                      { label: 'เหตุผล 2', value: w.reason2 },
+                      { label: 'วันที่ออก', value: w.issued_at },
+                      { label: 'ผู้รับผิดชอบ', value: w.director_name },
                     ].map(item => item.value ? (
                       <div key={item.label} style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
                         <div style={{ fontSize: 12, color: '#8b91ab', minWidth: 60 }}>{item.label}</div>
@@ -262,7 +262,7 @@ export default function WarningsPage() {
                           fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
                         }}
                       >
-                        경고장 확인 완료
+                        ยืนยันการรับทราบ
                       </button>
                     )}
                   </div>
